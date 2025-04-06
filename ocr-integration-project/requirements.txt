@@ -1,0 +1,11 @@
+flask
+opencv-python
+pytesseract
+numpy
+scikit-learn
+nltk
+Pillow
+matplotlib
+PyQt5
+scikit-image
+
