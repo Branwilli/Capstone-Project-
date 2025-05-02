@@ -3,20 +3,23 @@ from Package import PackageComponent
 class Beverage_Score(PackageComponent):
     
     
-    def __init__(self, prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category,sweetner):
-        super().__init__(prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category)
-        self.sweetner = sweetner # sweetner is a set of added sweetners 
+    def __init__(self, Nutrition_Dict):
+        super().__init__(Nutrition_Dict)
+        self.sweetner = self.sweetnerCheck(Nutrition_Dict)
+
 
     def getCategory(self):
         return self.category
     
-    def sweetnerCheck(self):
-        sweetners_types = {"E 420 sorbitol", "E 421 mannitol", "E 953 isomalt", "E 956 alitame", "E 964 polyglycitol syrup", 
-                     "E 965 maltitol", "E 966 lactitol", "E 967 xylitol", "E 968 erythritol"}
-        for sweet in self.sweetner:
-            if sweet in sweetners_types:
+    
+    def sweetnerCheck(self, Nutrition_Dict):
+        sweetners = {"Sorbitol", "Mannitol", "Isomalt", "Alitame", "Polyglycitol Syrup", 
+                     "Maltitol", "Lactitol", "Xylitol", "Erythritol"}
+        for sweet in sweetners:
+            if sweet in Nutrition_Dict:
                 return True
         return False
+    
 
     def calculate(self):
 
@@ -25,8 +28,9 @@ class Beverage_Score(PackageComponent):
         Negative = 0
 
         # Assign 4 points to Negative if sweetner found
-        if self.sweetnerCheck() == True:
+        if self.sweetner:
             Negative+=4
+            
 
         # Negative Points Thresholds
         calories_threshold = [[0, 30] ,[1, 90], [2, 150], [3, 210], [4, 240], [5, 270], [6, 300], 
@@ -89,13 +93,6 @@ class Beverage_Score(PackageComponent):
                 Negative+=salt[0]
                 break
 
-        """
-        # Sweetner
-
-        if sweetnerCheck(self.sweetner) == True:
-            Negative+=4
-        """
-
 
         # Total Positive Points
 
@@ -114,8 +111,6 @@ class Beverage_Score(PackageComponent):
                 break
 
         # Fruits, Vegetables, Pulses
-
-        self.fvp = self.fvpCalc()
 
         for f_v_p in list(reversed(fvp_threshold)):
             if self.fvp > f_v_p[1]:

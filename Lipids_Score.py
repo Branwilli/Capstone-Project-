@@ -3,8 +3,8 @@ from Package import PackageComponent
 # This class refers to Fats/Oils/Nuts/Seeds
 class Lipids_Score(PackageComponent):
 
-    def __init__(self, prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category):
-        super().__init__(prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category)
+    def __init__(self, Nutrition_Dict):
+        super().__init__(Nutrition_Dict)
 
     def getCategory(self):
         return self.category
@@ -25,8 +25,6 @@ class Lipids_Score(PackageComponent):
         sat_fat_threshold = [[0, 10], [1, 16], [2, 22], [3, 28], [4, 34], [5, 40], [6, 46], [7, 52] , [8, 58], 
                              [9, 64]]
         
-        #** Energy(calories) from saturated fatty acids = saturated fatty acids [g/100g] x 37 kJ/g
-        #calories_threshold = [[x[0], x[1]*37] for x in sat_fat_threshold]
 
         sugar_threshold = [[1, 3.4], [2, 6.8], [3, 10], [4, 14], [5, 17], [6, 20], [7, 24], [8, 27], 
                            [9, 31], [10, 34], [11, 37], [12, 41], [13, 44], [14, 48], [15, 51]]
@@ -102,8 +100,6 @@ class Lipids_Score(PackageComponent):
                 break
 
         # Fruits, Vegetables, Pulses
-
-        self.fvp = self.fvpCalc()
 
         for f_v_p in list(reversed(fvp_threshold)):
             if self.fvp > f_v_p[1]:

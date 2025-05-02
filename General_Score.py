@@ -2,8 +2,8 @@ from Package import PackageComponent
 
 class General_Score(PackageComponent):
 
-    def __init__(self, prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category):
-        super().__init__(prod_name, calories, saturated_fats, sugar, sodium, protein, dietary_fibre, fvp, category)
+    def __init__(self, Nutrition_Dict):
+        super().__init__(Nutrition_Dict)
     
     def getCategory(self):
         return self.category
@@ -82,7 +82,7 @@ class General_Score(PackageComponent):
                 # Special rule for red meat and products with red meat
                  # For products in the red meat category, the number of points
                  #  for protein is limited to a maximum of 2 points.
-                if self.category == 'red meat':
+                if self.category == 'Red Meat':
                     if prot[0] > 2:
                         Positive+=2
                 else:
@@ -99,8 +99,6 @@ class General_Score(PackageComponent):
                 break
 
         # Fruits, Vegetables, Pulses
-
-        self.fvp = self.fvpCalc()
 
         for f_v_p in list(reversed(fvp_threshold)):
             if self.fvp > f_v_p[1]:
