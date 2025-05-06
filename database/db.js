@@ -1,7 +1,11 @@
 const mysql = require("mysql2");
 const path = require("path");
+const express = require("express");
 
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
+const app = express();
+app.use(express.json());
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
