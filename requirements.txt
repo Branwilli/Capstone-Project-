@@ -13,3 +13,4 @@ pytesseract
 Pillow
 PyQt5
 scikit-learn
+pyspellchecker

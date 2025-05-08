@@ -11,6 +11,7 @@ from collections import defaultdict
 from PyQt5.QtWidgets import QApplication, QFileDialog
 from sklearn.cluster import KMeans
 from spacy.matcher import Matcher
+from spellchecker import SpellChecker
 
 # Set Tesseract path
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -119,7 +120,20 @@ def extract_text(image, conf_threshold=20):
         return "", [], {}
 
 def correct_ocr_errors(extracted_text):
-    text = re.sub(r'(?<!\d)0(?!\d)', 'O', extracted_text)
+    spell = SpellChecker()
+    # Tokenize the text into words
+    words = extracted_text.split()
+    corrected_words = []
+    for word in words:
+        # Only correct alphabetic words, leave numbers and symbols
+        if word.isalpha():
+            corrected = spell.correction(word)
+            corrected_words.append(corrected if corrected else word)
+        else:
+            corrected_words.append(word)
+    text = ' '.join(corrected_words)
+    # Apply regex-based corrections as before
+    text = re.sub(r'(?<!\d)0(?!\d)', 'O', text)
     text = re.sub(r'(?<!\d)1(?!\d)', 'I', text)
     text = re.sub(r'[^a-zA-Z0-9\s%.,]', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
@@ -187,9 +201,9 @@ def is_numeric_token(text):
 
 def extract_line_nutrients(words):
     """
-    Using token-by-token processing, extract (nutrient_candidate, value) pairs.
+    Using token-by-token processing, extract (nutrient_candidate, value, unit) tuples.
     If multiple pairs appear in one line (e.g. 'Calories 250 Calories from fat 10'),
-    they are separated out.
+    they are separated out. The value and unit are separated if possible.
     """
     nutrients = []
     buffer = []
@@ -200,7 +214,15 @@ def extract_line_nutrients(words):
         if is_numeric_token(token):
             if buffer:
                 nutrient_candidate = " ".join(buffer).strip()
-                nutrients.append((nutrient_candidate, token))
+                # Extract value and unit from token
+                match = re.match(r'^(<?\d+\.?\d*)\s*(g|mg|mcg|%|kcal)?$', token, re.IGNORECASE)
+                if match:
+                    value = match.group(1)
+                    unit = match.group(2) if match.group(2) else ''
+                else:
+                    value = token
+                    unit = ''
+                nutrients.append((nutrient_candidate, value, unit))
             buffer = []
         else:
             buffer.append(token)
@@ -269,21 +291,21 @@ def categorize_text(clustered_sections):
 
         for line in lines:
             pairs = extract_line_nutrients(line['words'])
-            for nutrient_candidate, value in pairs:
+            for nutrient_candidate, value, unit in pairs:
                 # Use spaCy entity matcher to check nutrient_candidate.
                 corrected_name = nlp_entity_match(nutrient_candidate)
                 # Validate against our known nutrients list:
                 if corrected_name.lower() in (k.lower() for k in KNOWN_NUTRIENTS):
                     if n_clusters == 1:
-                        categorized['Nutritional Values']['Per Serving'][corrected_name] = value
+                        categorized['Nutritional Values']['Per Serving'][corrected_name] = value + unit
                     else:
                         numeric_obj = next((w for w in line['words'] if w['text'].strip() == value), None)
                         if numeric_obj:
                             left_x = numeric_obj['left']
                             if abs(left_x - col1_center) < abs(left_x - col2_center):
-                                categorized['Nutritional Values']['Per Serving'][corrected_name] = value
+                                categorized['Nutritional Values']['Per Serving'][corrected_name] = value + unit
                             else:
-                                categorized['Nutritional Values']['Per Container'][corrected_name] = value
+                                categorized['Nutritional Values']['Per Container'][corrected_name] = value + unit
                     block_has_nutrients = True
                 else:
                     print(f"Skipping invalid nutrient: {nutrient_candidate}")
