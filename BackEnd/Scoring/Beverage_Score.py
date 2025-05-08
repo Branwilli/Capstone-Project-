@@ -1,4 +1,4 @@
-from Package import PackageComponent
+from Backend.Scoring.Package import PackageComponent
 
 class Beverage_Score(PackageComponent):
     

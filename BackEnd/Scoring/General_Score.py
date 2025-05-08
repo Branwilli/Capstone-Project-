@@ -1,4 +1,4 @@
-from Package import PackageComponent
+from Backend.Scoring.Package import PackageComponent
 
 class General_Score(PackageComponent):
 

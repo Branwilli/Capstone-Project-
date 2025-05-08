@@ -1,6 +1,6 @@
-from General_Score import General_Score
-from Lipids_Score import Lipids_Score
-from Beverage_Score import Beverage_Score
+from Backend.Scoring.General_Score import General_Score
+from Backend.Scoring.Lipids_Score import Lipids_Score
+from Backend.Scoring.Beverage_Score import Beverage_Score
 
 class Score:
     # NutritionValues is of type dictionary [output from the OCR]
