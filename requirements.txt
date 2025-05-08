@@ -1,0 +1,15 @@
+# put requirments here 
+
+requests
+google-generativeai
+instructor
+pydantic
+python-dotenv
+pandas
+opencv-python
+numpy
+spacy
+pytesseract
+Pillow
+PyQt5
+scikit-learn

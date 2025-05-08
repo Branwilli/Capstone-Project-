@@ -13,5 +13,5 @@ root.render(
   </React.StrictMode>
 );
 
-// Log web vitals (optional)
+// Log web vitals 
 reportWebVitals(console.log);
