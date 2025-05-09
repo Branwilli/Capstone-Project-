@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+// TODO: Replace placeholder values and hardcoded stats with data fetched from the backend.
+// - Fetch user profile (e.g., userName, health conditions, preferences, goals) from backend API
+// - Fetch scan statistics, recent scans, and nutritional insights from backend API
+// - Use useEffect to load data on component mount
+
 function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('User'); // Placeholder; fetch from profile db

@@ -26,6 +26,9 @@ function ScanPage() {
     if (!productName.trim()) return alert('Please enter a product name.');
     setIsUploading(true);
     try {
+      // TODO: Replace the mock data below with a real API call to the backend
+      // const response = await fetch('/api/scan', { ... });
+      // const data = await response.json();
       const data = {
         scan_id: '123',
         productName,
@@ -34,7 +37,6 @@ function ScanPage() {
         fats: 5,
         protein: 15,
         vitamins: ['A', 'C'],
-        ingredients: ['Sugar', 'Salt', 'Red Dye 40'],
         nutriscores: 'B',
         chemicalRisk: 2,
         feedback: 'Moderate sodium; avoid if sensitive to Red Dye 40.'

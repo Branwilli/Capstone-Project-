@@ -1,5 +1,19 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
+import {
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Chart
+} from 'chart.js';
+
+// TODO: The 'data' prop should be populated from the backend (e.g., after a scan or from a results API)
+// Ensure the parent component fetches the nutritional data from the backend and passes it here.
+
+Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function NutrientChart({ data }) {
   const chartData = {

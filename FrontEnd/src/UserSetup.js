@@ -34,6 +34,8 @@ function UserSetup({ setIsLoggedIn, setIsSetupComplete }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const profile = { name, age, occupation, healthConditions, gender, dailyRoutine, goals, likes, dislikes, quote };
+    // TODO: Replace localStorage usage with a backend API call to save user profile
+    // Example: await fetch('/api/users/profile', { method: 'POST', body: JSON.stringify(profile), ... })
     localStorage.setItem('profile', JSON.stringify(profile));
     localStorage.setItem('isSetupComplete', 'true');
     setIsSetupComplete(true);

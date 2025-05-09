@@ -1,5 +1,8 @@
 import React from 'react';
 
+// Make sure these values are fetched from the backend (e.g., after a scan or from a results API)
+// and passed down to ScoreCard when rendering.
+
 function ScoreCard({ nutriscores, chemicalRisk }) {
   const scoreColor = nutriscores === 'A' ? '#4CAF50' : nutriscores === 'E' ? '#F44336' : '#FFC107';
   return (

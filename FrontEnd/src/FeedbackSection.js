@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
 
+// TODO: Replace alert and local state with a backend API call to submit user feedback/rating.
+// - In handleRating, send the rating to the backend (e.g., POST /api/feedback or /api/rating)
+
 function FeedbackSection({ feedback }) {
   const [rating, setRating] = useState(null);
 

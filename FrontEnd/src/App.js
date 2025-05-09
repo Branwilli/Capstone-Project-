@@ -14,6 +14,10 @@ import Signup from './Signup';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+// TODO: Replace localStorage and isLoggedIn/isSetupComplete state with backend authentication and user session management.
+// - On app load, check authentication/session status from backend (e.g., via a token or session API)
+// - Update isLoggedIn and isSetupComplete based on backend response
+// - Update logout logic to call backend logout endpoint and clear session
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

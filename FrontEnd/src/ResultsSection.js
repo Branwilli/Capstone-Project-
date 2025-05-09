@@ -1,5 +1,8 @@
 import React from 'react';
 
+// TODO: The 'data' prop should be populated from the backend (e.g., after a scan or from a results API)
+// Ensure the parent component fetches the nutritional and ingredient data from the backend and passes it here.
+
 function ResultsSection({ data }) {
   return (
     <div className="card shadow-sm mb-3">

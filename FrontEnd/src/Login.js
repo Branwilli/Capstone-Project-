@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// TODO: Replace localStorage usage and simulated login with a backend API call for authentication.
+// - In handleSubmit, send username and password to the backend (e.g., POST /api/users/login)
+// - Use the backend response to determine login success and setup completion
+
 function Login({ setIsLoggedIn, setIsSetupComplete }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');

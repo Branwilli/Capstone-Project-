@@ -14,7 +14,8 @@ function Signup({ setIsLoggedIn, setIsSetupComplete }) {
       setError('Passwords do not match');
       return;
     }
-    // Simulate registration logic
+    // TODO: Replace the simulated registration logic below with a backend API call to register the user
+    // Example: await fetch('/api/users/register', { method: 'POST', body: JSON.stringify({ username, password }), ... })
     localStorage.setItem('isSetupComplete', 'false');
     setIsLoggedIn(true);
     setIsSetupComplete(false);

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
+// TODO: Replace localStorage usage with backend API calls for fetching and updating the user profile.
+//  In useEffect, fetch the profile from the backend (e.g., GET /api/users/profile)
+// In handleSubmit, update the profile in the backend (e.g., PUT /api/users/profile)
+
 function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
