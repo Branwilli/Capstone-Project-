@@ -315,7 +315,7 @@ def categorize_text(clustered_sections):
     return categorized
 
 
-def main():
+def process_image_from_array():
     while True:
         mode = input("Enter 'c' to capture an image or 's' to select an image: ").strip().lower()
         if mode == 'c':
@@ -338,36 +338,37 @@ def main():
         return
 
     recognized_text, boxes, ocr_data = extract_text(preprocessed_image, conf_threshold=20)
-    print("Recognized Text:", recognized_text)
+    #print("Recognized Text:", recognized_text)
 
     corrected_text = correct_ocr_errors(recognized_text)
-    print("Corrected Text:", corrected_text)
+    #print("Corrected Text:", corrected_text)
     # Optionally save corrected text if needed
     documents_dir = os.path.join(os.path.expanduser("~"), "Documents")
     text_output_path = os.path.join(documents_dir, "corrected_text.txt")
     os.makedirs(os.path.dirname(text_output_path), exist_ok=True)
     with open(text_output_path, "w", encoding="utf-8") as f:
         f.write(corrected_text)
-    print(f"Corrected OCR text saved to {text_output_path}")
+    #print(f"Corrected OCR text saved to {text_output_path}")
 
     line_data = extract_lines(ocr_data, conf_threshold=50)
-    print(f"Extracted {len(line_data)} lines of text")
+    #print(f"Extracted {len(line_data)} lines of text")
 
     sections = layout_analysis(line_data)
-    print(f"Detected {len(sections)} sections")
+    #print(f"Detected {len(sections)} sections")
 
     categorized = categorize_text(sections)
-    print("Text categorization complete.")
-    print(f"Total nutritional tables detected: {categorized['table_count']}")
+    #print("Text categorization complete.")
+    #print(f"Total nutritional tables detected: {categorized['table_count']}")
 
     # Prioritize Per Serving data; fall back to Per Container if needed.
     final_nutrients = categorized['Nutritional Values']['Per Serving']
     if not final_nutrients and categorized['Nutritional Values']['Per Container']:
         final_nutrients = categorized['Nutritional Values']['Per Container']
 
-    print("\nFinal Nutrients Dictionary:")
-    print(json.dumps(final_nutrients, indent=2))
+    return final_nutrients
+    #print("\nFinal Nutrients Dictionary:")
+    #print(json.dumps(final_nutrients, indent=2))
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+    #main()
