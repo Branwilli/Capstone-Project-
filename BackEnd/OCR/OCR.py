@@ -401,5 +401,5 @@ def process_image_from_array(
     print("Final Nutrients:", final_nutrients)
     return final_nutrients
 
-if __name__ == "__main__":
-    process_image_from_array()
+#if __name__ == "__main__":
+    #process_image_from_array()
