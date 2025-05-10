@@ -46,7 +46,7 @@ def generate_suggestion(score, product, nutrients_issue=None):
     """
 
     country = get_location()
-
+    
     goods = df[df["Product Name"].str.lower() == product.lower()] # Search for the product in the dataset (case insensitive)
     
     if not goods.empty:

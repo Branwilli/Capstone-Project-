@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Flask
 from .db import db_connect
 
 users = Blueprint('users', __name__)
@@ -7,10 +7,17 @@ users = Blueprint('users', __name__)
 @users.route("/api/users", methods=["GET"])
 def get_all_users():
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM Users")
-    users_list = cursor.fetchall()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users")
+
+    users_result = cursor.fetchall()
+    #print(users_result)
+    users_list = []
+    for id, fname, lname, addr, email in users_result:
+        users_list.append({'UserID': id, 'FirstName': fname, 'Last Name': lname, 'Addres': addr, 'email': email, })
+    cursor.close()
     db.close()
+    print(users_list)
     return jsonify(users_list)
 
 # Add new user
@@ -26,3 +33,4 @@ def add_user():
     new_id = cursor.lastrowid
     db.close()
     return jsonify({ "message": "User added successfully", "user_id": new_id }), 201
+

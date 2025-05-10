@@ -55,3 +55,4 @@ def delete_scan(scan_id):
     db.commit()
     db.close()
     return jsonify({ "message": "Scan deleted successfully" })
+

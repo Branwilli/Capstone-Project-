@@ -8,11 +8,12 @@ import numpy as np
 import uuid
 from pathlib import Path 
 
-backend_path = Path(__file__).resolve().parent/".."/'Backend'
-sys.path.append(str(backend_path))
+project_root = Path(__file__).resolve().parents[2]
+sys.path.append(str(project_root))
 
 # Feedback module imports
 from Feedback.feedback import generate_suggestion, get_location
+#from C:\Users\bw675\Downloads\Capstone-Project\BackEnd\Feedback\feedback.py
 from Feedback.rating import show_rating_panel, submit_rating, update_stars
 
 # OCR module imports
@@ -103,7 +104,8 @@ def add_recommendation():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-    '''data = request.json
+    '''
+    data = request.json
     db = db_connect()
     cursor = db.cursor(dictionary=True)
     sql = """
