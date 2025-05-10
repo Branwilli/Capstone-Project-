@@ -17,3 +17,4 @@ pyspellchecker
 flask
 'instructor[google-generativeai]'
 mysql-connector-python
+symspellpy

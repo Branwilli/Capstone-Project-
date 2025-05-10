@@ -19,7 +19,7 @@ class ItemComparison(BaseModel):
 
 # Define the main data model for generating health-related suggestions
 class DataModel(BaseModel):
-    score: int = Field(..., description='An intger between 1 and 100 inclusive')
+    score: str = Field(..., description='A letter between A and E inclusive')
     translation: str = Field(..., description='A paragraph of what the score means in terms of health given the user health information.')
     health_issues: List[str] = Field(..., description='A list of medical conditions.')
     item: str = Field(..., description='A text input.')

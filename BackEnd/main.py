@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify
 import mysql.connector
 import os
+import base64
+import cv2
 from dotenv import load_dotenv
+import uuid
+import numpy as np
 
 # Feedback module imports
 from Feedback.feedback import generate_suggestion, get_location
@@ -82,7 +86,7 @@ def add_user():
 @app.route("/api/scans/user/<int:user_id>", methods=["GET"])
 def get_user_scans(user_id):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT S.scan_id, P.name AS product_name, S.ocr_text, S.image_url, S.scan_time
         FROM Scans S
@@ -112,7 +116,7 @@ def add_scan():
 @app.route("/api/scans/<int:scan_id>", methods=["GET"])
 def get_scan(scan_id):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Scans WHERE scan_id = %s", (scan_id,))
     result = cursor.fetchone()
     db.close()
@@ -134,7 +138,7 @@ def delete_scan(scan_id):
 @app.route("/api/products", methods=["GET"])
 def get_all_products():
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Products")
     result = cursor.fetchall()
     db.close()
@@ -144,7 +148,7 @@ def get_all_products():
 @app.route("/api/products/<int:product_id>", methods=["GET"])
 def get_product(product_id):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Products WHERE product_id = %s", (product_id,))
     product = cursor.fetchone()
     db.close()
@@ -157,7 +161,7 @@ def get_product(product_id):
 def add_product():
     data = request.json
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     sql = """
         INSERT INTO Products (
             name, brand, calories, sodium, sugar, fats, cholesterol,
@@ -189,7 +193,7 @@ def delete_product(product_id):
 @app.route("/api/products/search/<query>", methods=["GET"])
 def search_products(query):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     q = f"%{query}%"
     cursor.execute("SELECT * FROM Products WHERE name LIKE %s OR brand LIKE %s", (q, q))
     results = cursor.fetchall()
@@ -200,16 +204,17 @@ def search_products(query):
 @app.route("/api/products/rankings/healthiest", methods=["GET"])
 def healthiest_products():
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM Products ORDER BY health_score DESC LIMIT 5")
     results = cursor.fetchall()
     db.close()
     return jsonify(results)
+
 # Get all recommendations for a user
 @app.route("/api/recommendations/<int:user_id>", methods=["GET"])
 def get_user_recommendations(user_id):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
@@ -258,7 +263,7 @@ def add_recommendation():
 
         feedback = generate_suggestion(score_result, Product_Name)
 
-        return feedback
+        return jsonify(feedback)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -298,7 +303,7 @@ def delete_recommendation(recommendation_id, user_id):
 @app.route("/api/recommendations/feedback", methods=["GET"])
 def feedback_view():
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
@@ -317,7 +322,7 @@ def feedback_view():
 @app.route("/api/recommendations/feedback/<int:user_id>", methods=["GET"])
 def user_feedback(user_id):
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
