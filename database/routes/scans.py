@@ -1,17 +1,8 @@
-from flask import Flask, request, jsonify
-import mysql.connector
+from flask import Blueprint, request, jsonify
+from .db import db_connect
 
 # Initialize Flask app
-scans = Flask(__name__)
-
-# Database connection function
-def db_connect():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Every-one1",
-        database="NutriScanDB"
-    )
+scans = Blueprint('scans',__name__)
 
 # Get all scans for a specific user
 @scans.route("/api/scans/user/<int:user_id>", methods=["GET"])
@@ -64,7 +55,3 @@ def delete_scan(scan_id):
     db.commit()
     db.close()
     return jsonify({ "message": "Scan deleted successfully" })
-
-# Run the app
-if __name__ == "__main__":
-    scans.run(debug=True)

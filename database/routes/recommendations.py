@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-import mysql.connector
+from flask import Blueprint, request, jsonify
+from .db import db_connect
 import sys
 import os
 import base64
@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import uuid
 from pathlib import Path 
-
 
 backend_path = Path(__file__).resolve().parent/".."/'Backend'
 sys.path.append(str(backend_path))
@@ -44,16 +43,7 @@ from Scoring.Package import PackageComponent
 from Scoring.Score import Score
 
 # Initialize Flask app
-recommendations = Flask(__name__)
-
-# Database connection function
-def db_connect():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Every-one1",
-        database="NutriScanDB"
-    )
+recommendations = Blueprint('recommendations',__name__)
 
 # Get all recommendations for a user
 @recommendations.route("/api/recommendations/<int:user_id>", methods=["GET"])
@@ -184,7 +174,3 @@ def user_feedback(user_id):
     db.close()
     return jsonify(results)
 
-
-# Run the app
-if __name__ == "__main__":
-    recommendations.run(debug=True)

@@ -1,19 +1,7 @@
-from flask import Flask, request, jsonify
-import mysql.connector
+from flask import Blueprint, request, jsonify
+from .db import db_connect
 
-users = Flask(__name__)
-
-# Connect to MySQL
-def db_connect():
-    db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Every-one1",
-        database="NutriScanDB"
-    )
-    return db
-
-db_connect()
+users = Blueprint('users', __name__)
 
 # Get all users
 @users.route("/api/users", methods=["GET"])
@@ -38,8 +26,3 @@ def add_user():
     new_id = cursor.lastrowid
     db.close()
     return jsonify({ "message": "User added successfully", "user_id": new_id }), 201
-
-
-# Run the app directly
-if __name__ == "__main__":
-    users.run(debug=True)

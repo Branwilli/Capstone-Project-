@@ -1,17 +1,8 @@
-from flask import Flask, request, jsonify
-import mysql.connector
+from flask import Blueprint, request, jsonify
+from .db import db_connect
 
 # Initialize the app
-products = Flask(__name__)
-
-# Reusable database connection
-def db_connect():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Every-one1",
-        database="NutriScanDB"
-    )
+products = Blueprint('products',__name__)
 
 # Get all products
 @products.route("/api/products", methods=["GET"])
@@ -89,6 +80,3 @@ def healthiest_products():
     db.close()
     return jsonify(results)
 
-# Run the app
-if __name__ == "__main__":
-    products.run(debug=True)

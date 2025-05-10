@@ -14,3 +14,6 @@ Pillow
 PyQt5
 scikit-learn
 pyspellchecker
+flask
+'instructor[google-generativeai]'
+mysql-connector-python
