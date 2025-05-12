@@ -41,16 +41,18 @@ function ScanPage() {
       });
       const recData = await recRes.json();
       if (!recRes.ok) throw new Error(recData.message || recData.error || 'Recommendation failed');
-
-      // 2. POST scan to backend with image_url as the saved file path (if provided)
+      
       const imageUrl = recData.image_url || '';
+      const userId = localStorage.getItem('user_id');
+      // If product_id is returned from recData, use it; else fallback to 1
+      const productId = recData.product_id || 1;
       const scanRes = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 1, // TODO: Replace with actual user id from auth/session
-          product_id: 1, // TODO: Replace with actual product id if available
-          ocr_text: '', // Optional: fill if you have OCR text
+          user_id: userId,
+          product_id: productId,
+          ocr_text: recData.ocr_text || '',
           image_url: imageUrl
         })
       });

@@ -359,6 +359,18 @@ def user_feedback(user_id):
     db.close()
     return jsonify(results)
 
+@app.route("/api/feedback", methods=["POST"])
+def submit_feedback():
+    data = request.json
+    db = db_connect()
+    cursor = db.cursor()
+    sql = "INSERT INTO Feedback (user_id, rating) VALUES (%s, %s)"
+    values = (data.get("user_id"), data.get("rating"))
+    cursor.execute(sql, values)
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({"message": "Feedback submitted"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True, port=int(os.getenv('PORT', 8081)))
