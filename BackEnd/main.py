@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import uuid
 import numpy as np
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 
 # Feedback module imports
 from Feedback.feedback import generate_suggestion, get_location
@@ -40,9 +41,17 @@ from Scoring.Package import PackageComponent
 from Scoring.Score import Score
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 load_dotenv()
 
-UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    try:
+        os.makedirs(UPLOAD_FOLDER)
+    except PermissionError:
+        UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Reusable database connection
@@ -58,17 +67,20 @@ def db_connect():
 @app.route("/api/users", methods=["GET"])
 def get_all_users():
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM users")
-
     users_result = cursor.fetchall()
-    #print(users_result)
     users_list = []
-    for id, fname, lname, addr, email in users_result:
-        users_list.append({'UserID': id, 'FirstName': fname, 'Last Name': lname, 'Addres': addr, 'email': email, })
+    for user in users_result:
+        users_list.append({
+            'UserID': user.get('id') or user.get('UserID'),
+            'FirstName': user.get('fname') or user.get('FirstName'),
+            'LastName': user.get('lname') or user.get('LastName'),
+            'Address': user.get('addr') or user.get('Address'),
+            'email': user.get('email')
+        })
     cursor.close()
     db.close()
-    print(users_list)
     return jsonify(users_list)
 
 # Add new user
@@ -89,7 +101,7 @@ def add_user():
 @app.route("/api/scans/user/<int:user_id>", methods=["GET"])
 def get_user_scans(user_id):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT S.scan_id, P.name AS product_name, S.ocr_text, S.image_url, S.scan_time
         FROM Scans S
@@ -98,6 +110,7 @@ def get_user_scans(user_id):
         ORDER BY S.scan_time DESC
     """, (user_id,))
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
@@ -119,9 +132,10 @@ def add_scan():
 @app.route("/api/scans/<int:scan_id>", methods=["GET"])
 def get_scan(scan_id):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Scans WHERE scan_id = %s", (scan_id,))
     result = cursor.fetchone()
+    cursor.close()
     db.close()
     if not result:
         return jsonify({ "message": "Scan not found" }), 404
@@ -141,9 +155,10 @@ def delete_scan(scan_id):
 @app.route("/api/products", methods=["GET"])
 def get_all_products():
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Products")
     result = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(result)
 
@@ -151,9 +166,10 @@ def get_all_products():
 @app.route("/api/products/<int:product_id>", methods=["GET"])
 def get_product(product_id):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Products WHERE product_id = %s", (product_id,))
     product = cursor.fetchone()
+    cursor.close()
     db.close()
     if not product:
         return jsonify({"message": "Product not found"}), 404
@@ -196,10 +212,11 @@ def delete_product(product_id):
 @app.route("/api/products/search/<query>", methods=["GET"])
 def search_products(query):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     q = f"%{query}%"
     cursor.execute("SELECT * FROM Products WHERE name LIKE %s OR brand LIKE %s", (q, q))
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
@@ -207,9 +224,10 @@ def search_products(query):
 @app.route("/api/products/rankings/healthiest", methods=["GET"])
 def healthiest_products():
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Products ORDER BY health_score DESC LIMIT 5")
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
@@ -217,7 +235,7 @@ def healthiest_products():
 @app.route("/api/recommendations/<int:user_id>", methods=["GET"])
 def get_user_recommendations(user_id):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
@@ -231,6 +249,7 @@ def get_user_recommendations(user_id):
         ORDER BY R.timestamp DESC
     """, (user_id,))
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
@@ -238,28 +257,27 @@ def get_user_recommendations(user_id):
 @app.route("/api/recommendations", methods=["POST"])
 def add_recommendation():
     try:
-        data = request.get_json()
-        image_data = data.get('image')
-
-        if not image_data:
-            return jsonify({'error': 'No image provided'}), 400
-        
-        filename = secure_filename(image_data.filename)
-        image_data.save(os.path.join(current_app.config["UPLOAD_FOLDER"],filename))
-        
-        image_path = os.path.join(UPLOAD_FOLDER, image_data)
-
-        if not os.path.exists(image_path):
-            return jsonify({'error': 'Image file not found'}), 404
-        
-        print("Decoding image")
-        image = cv2.imread(image_path)
-
-        #image_data = data['image'] 
-        #image_data = image_data.split(',')[1]
-        #image_bytes = base64.b64decode(image_data)
-        #nparr = np.frombuffer(image_bytes, np.uint8)
-        #image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # Accept both JSON (base64 image) and multipart/form-data (file upload)
+        if request.content_type and request.content_type.startswith('multipart/form-data'):
+            # File upload
+            if 'image' not in request.files:
+                return jsonify({'error': 'No image file provided'}), 400
+            image_file = request.files['image']
+            filename = secure_filename(image_file.filename)
+            file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            image_file.save(file_path)
+            image = cv2.imread(file_path)
+        else:
+            # JSON with base64 image
+            data = request.get_json()
+            image_data = data.get('image')
+            if not image_data:
+                return jsonify({'error': 'No image provided'}), 400
+            if image_data.startswith('data:image'):
+                image_data = image_data.split(',')[1]
+            image_bytes = base64.b64decode(image_data)
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if image is None:
             return jsonify({"error": "Could not decode image"}), 400
@@ -267,43 +285,20 @@ def add_recommendation():
         nutrition_data = process_image_from_array(image)
         if not nutrition_data.get('nutrients'):
             return jsonify({"error": "No nutrients detected in image"}), 400
-       
-        Product_Name = data.get('productInfo', 'Unknown')
-        
+
+        Product_Name = request.form.get('productInfo') if request.content_type and request.content_type.startswith('multipart/form-data') else data.get('productInfo', 'Unknown')
+
+        # Score expects a dict, not a set
         score = Score({
-            nutrition_data['nutrients'],
-            Product_Name 
+            'nutrients': nutrition_data['nutrients'],
+            'product_name': Product_Name
         })
         score_result = score.evaluate()
-
         feedback = generate_suggestion(score_result, Product_Name)
-
         return jsonify(feedback)
-    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-    '''
-    data = request.json
-    db = db_connect()
-    cursor = db.cursor(dictionary=True)
-    sql = """
-        INSERT INTO Recommendations (user_id, product_id, recommended_product_id, recommendation_reason)
-        VALUES (%s, %s, %s, %s)
-    """
-    values = (
-        data["user_id"],
-        data["product_id"],
-        data["recommended_product_id"],
-        data["recommendation_reason"]
-    )
-    cursor.execute(sql, values)
-    db.commit()
-    new_id = cursor.lastrowid
-    db.close()
-    return jsonify({ "message": "Recommendation added", "recommendation_id": new_id }), 201
-'''
-    
+
 # Delete a recommendation
 @app.route("/api/recommendations/<int:recommendation_id>/<int:user_id>", methods=["DELETE"])
 def delete_recommendation(recommendation_id, user_id):
@@ -318,7 +313,7 @@ def delete_recommendation(recommendation_id, user_id):
 @app.route("/api/recommendations/feedback", methods=["GET"])
 def feedback_view():
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
@@ -330,6 +325,7 @@ def feedback_view():
         JOIN Products P2 ON R.recommended_product_id = P2.product_id
     """)
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
@@ -337,7 +333,7 @@ def feedback_view():
 @app.route("/api/recommendations/feedback/<int:user_id>", methods=["GET"])
 def user_feedback(user_id):
     db = db_connect()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT 
             P1.name AS original_product,
@@ -352,9 +348,10 @@ def user_feedback(user_id):
         ORDER BY R.timestamp DESC
     """, (user_id,))
     results = cursor.fetchall()
+    cursor.close()
     db.close()
     return jsonify(results)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=int(os.getenv('PORT', 8081)))

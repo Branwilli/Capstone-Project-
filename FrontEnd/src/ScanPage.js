@@ -26,28 +26,39 @@ function ScanPage() {
     if (!productName.trim()) return alert('Please enter a product name.');
     setIsUploading(true);
     try {
-      // TODO: Replace the mock data below with a real API call to the backend
-      // const response = await fetch('/api/scan', { ... });
-      // const data = await response.json();
-      const data = {
-        scan_id: '123',
-        productName,
-        sodium: 200,
-        sugar: 10,
-        fats: 5,
-        protein: 15,
-        vitamins: ['A', 'C'],
-        nutriscores: 'B',
-        chemicalRisk: 2,
-        feedback: 'Moderate sodium; avoid if sensitive to Red Dye 40.'
-      };
-      setTimeout(() => {
-        setIsUploading(false);
-        navigate('/results', { state: data });
-      }, 2000);
+      // 1. POST scan to backend
+      const scanRes = await fetch('/api/scans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // You may need to add user_id and product_id if required by backend
+          user_id: 1, // TODO: Replace with actual user id from auth/session
+          product_id: 1, // TODO: Replace with actual product id if available
+          ocr_text: '', // Optional: fill if you have OCR text
+          image_url: image // For demo, send base64 image
+        })
+      });
+      const scanData = await scanRes.json();
+      if (!scanRes.ok) throw new Error(scanData.message || 'Scan failed');
+
+      // 2. POST to recommendations for analysis
+      const recRes = await fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image,
+          productInfo: productName
+        })
+      });
+      const recData = await recRes.json();
+      if (!recRes.ok) throw new Error(recData.message || 'Recommendation failed');
+
+      setIsUploading(false);
+      navigate('/results', { state: recData });
     } catch (error) {
       console.error('Error scanning:', error);
       setIsUploading(false);
+      alert(error.message || 'Scan failed');
     }
   };
 

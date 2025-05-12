@@ -34,7 +34,7 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))  # Configure the Gemini AI 
 # Create an AI client for generating suggestions
 client = instructor.from_gemini(genai.GenerativeModel(model_name="models/gemini-2.0-flash"), mode=instructor.Mode.GEMINI_JSON)
 
-df = pd.read_csv("Food_Dataset_Jamaica.csv") # Load the food dataset for Jamaica
+df = pd.read_csv(os.path.join(os.path.dirname(__file__), '../Food_Dataset_Jamaica.csv')) # Load the food dataset for Jamaica
 
 
 def generate_suggestion(score, product, nutrients_issue=None):

@@ -8,6 +8,7 @@ python-dotenv
 pandas
 opencv-python
 numpy
+flask
 spacy
 pytesseract
 Pillow
@@ -15,6 +16,6 @@ PyQt5
 scikit-learn
 pyspellchecker
 flask
-'instructor[google-generativeai]'
+instructor[google-generativeai]
 mysql-connector-python
 symspellpy
