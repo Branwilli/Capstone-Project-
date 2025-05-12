@@ -68,15 +68,13 @@ def db_connect():
 def get_all_users():
     db = db_connect()
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM users")
+    cursor.execute("SELECT * FROM Users")
     users_result = cursor.fetchall()
     users_list = []
     for user in users_result:
         users_list.append({
             'UserID': user.get('id') or user.get('UserID'),
-            'FirstName': user.get('fname') or user.get('FirstName'),
-            'LastName': user.get('lname') or user.get('LastName'),
-            'Address': user.get('addr') or user.get('Address'),
+            'Name': user.get('name') or user.get('Name'),
             'email': user.get('email')
         })
     cursor.close()
@@ -94,6 +92,7 @@ def add_user():
     cursor.execute(sql, values)
     db.commit()
     new_id = cursor.lastrowid
+    cursor.close()
     db.close()
     return jsonify({ "message": "User added successfully", "user_id": new_id }), 201
 
@@ -267,6 +266,7 @@ def add_recommendation():
             file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
             image_file.save(file_path)
             image = cv2.imread(file_path)
+            image_url = file_path  # Save the file path for response
         else:
             # JSON with base64 image
             data = request.get_json()
@@ -278,6 +278,11 @@ def add_recommendation():
             image_bytes = base64.b64decode(image_data)
             nparr = np.frombuffer(image_bytes, np.uint8)
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            # Save the image to disk for consistency
+            filename = f"scan_{uuid.uuid4().hex}.jpg"
+            file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            cv2.imwrite(file_path, image)
+            image_url = file_path
 
         if image is None:
             return jsonify({"error": "Could not decode image"}), 400
@@ -295,6 +300,8 @@ def add_recommendation():
         })
         score_result = score.evaluate()
         feedback = generate_suggestion(score_result, Product_Name)
+        # Add image_url to response for frontend to use in /api/scans
+        feedback['image_url'] = image_url
         return jsonify(feedback)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

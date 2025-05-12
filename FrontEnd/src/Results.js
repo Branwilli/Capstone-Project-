@@ -9,6 +9,7 @@ function Results() {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [resultData, setResultData] = useState(null);
 
   const data = location.state || {};
 
@@ -17,7 +18,6 @@ function Results() {
       try {
         setLoading(true);
         setError(null);
-
         const response = await fetch('/api/recommendations', {
           method: 'POST',
           headers: {
@@ -28,20 +28,18 @@ function Results() {
             productInfo: data.productName
           })
         });
-
         if (!response.ok) {
           throw new Error('Product processing failed');
         }
-
         const results = await response.json();
-        } catch (err) {
+        setResultData(results);
+      } catch (err) {
         setError(err.message);
-        console.error('Processing error:', err);
+        setResultData(null);
       } finally {
         setLoading(false);
-      } 
+      }
     };
-
     if (data.image) {
       processProduct();
     }
@@ -50,16 +48,20 @@ function Results() {
   return (
     <div className="results pt-16 container mx-auto px-4">
       <h2 className="text-2xl font-bold text-secondary mb-4">Results for {data.productName || 'Unknown Product'}</h2>
-      <div className="row">
-        <div className="col-md-6">
-          <ScoreCard nutriscores={data.nutriscores} chemicalRisk={data.chemicalRisk} />
-          <NutrientChart data={data} />
+      {loading && <div>Loading...</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+      {resultData && (
+        <div className="row">
+          <div className="col-md-6">
+            <ScoreCard nutriscores={resultData.nutriscores} chemicalRisk={resultData.chemicalRisk} />
+            <NutrientChart data={resultData} />
+          </div>
+          <div className="col-md-6">
+            <ResultsSection data={resultData} />
+            <FeedbackSection feedback={resultData.feedback} />
+          </div>
         </div>
-        <div className="col-md-6">
-          <ResultsSection data={data} />
-          <FeedbackSection feedback={data.feedback} />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

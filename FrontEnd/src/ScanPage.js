@@ -4,13 +4,16 @@ import { Spinner } from 'react-bootstrap';
 
 function ScanPage() {
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [productName, setProductName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
+  const cameraInputRef = React.useRef();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setImage(reader.result);
       reader.readAsDataURL(file);
@@ -18,40 +21,41 @@ function ScanPage() {
   };
 
   const handleTakePhoto = () => {
-    alert('Camera functionality is not implemented in this demo.');
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
   };
 
   const handleScan = async () => {
-    if (!image) return alert('Please upload an image.');
+    if (!imageFile) return alert('Please upload an image.');
     if (!productName.trim()) return alert('Please enter a product name.');
     setIsUploading(true);
     try {
-      // 1. POST scan to backend
+      // 1. POST to recommendations for analysis and image upload
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('productInfo', productName);
+      const recRes = await fetch('/api/recommendations', {
+        method: 'POST',
+        body: formData
+      });
+      const recData = await recRes.json();
+      if (!recRes.ok) throw new Error(recData.message || recData.error || 'Recommendation failed');
+
+      // 2. POST scan to backend with image_url as the saved file path (if provided)
+      const imageUrl = recData.image_url || '';
       const scanRes = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // You may need to add user_id and product_id if required by backend
           user_id: 1, // TODO: Replace with actual user id from auth/session
           product_id: 1, // TODO: Replace with actual product id if available
           ocr_text: '', // Optional: fill if you have OCR text
-          image_url: image // For demo, send base64 image
+          image_url: imageUrl
         })
       });
       const scanData = await scanRes.json();
       if (!scanRes.ok) throw new Error(scanData.message || 'Scan failed');
-
-      // 2. POST to recommendations for analysis
-      const recRes = await fetch('/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image,
-          productInfo: productName
-        })
-      });
-      const recData = await recRes.json();
-      if (!recRes.ok) throw new Error(recData.message || 'Recommendation failed');
 
       setIsUploading(false);
       navigate('/results', { state: recData });
@@ -72,6 +76,15 @@ function ScanPage() {
             accept="image/*"
             onChange={handleFileChange}
             className="form-control mb-3"
+          />
+          {/* Hidden camera input for taking a photo */}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            ref={cameraInputRef}
+            onChange={handleFileChange}
           />
           <button
             onClick={handleTakePhoto}

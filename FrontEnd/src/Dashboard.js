@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 // TODO: Replace placeholder values and hardcoded stats with data fetched from the backend.
@@ -8,7 +8,45 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('User'); // Placeholder; fetch from profile db
+  const [userName, setUserName] = useState('User');
+  const [profile, setProfile] = useState(null);
+  const [stats, setStats] = useState({ scans: 0, healthy: 0, warnings: 0 });
+  const [recentScans, setRecentScans] = useState([]);
+
+  useEffect(() => {
+    // Fetch user profile
+    const fetchProfile = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (!userId) return;
+        const res = await fetch(`/api/users/profile?user_id=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+          setUserName(data.name || 'User');
+        }
+      } catch {}
+    };
+    // Fetch scan stats
+    const fetchStats = async () => {
+      try {
+        const userId = localStorage.getItem('user_id');
+        if (!userId) return;
+        const res = await fetch(`/api/scans/user/${userId}`);
+        if (res.ok) {
+          const scans = await res.json();
+          setStats({
+            scans: scans.length,
+            healthy: scans.filter(s => s.health_score > 70).length,
+            warnings: scans.filter(s => s.health_score < 40).length
+          });
+          setRecentScans(scans.slice(-3).reverse());
+        }
+      } catch {}
+    };
+    fetchProfile();
+    fetchStats();
+  }, []);
 
   const handleScan = (type) => {
     navigate('/scan', { state: { uploadType: type } });
@@ -39,19 +77,19 @@ function Dashboard() {
           <div className="row g-3 mb-5">
             <div className="col-md-3">
               <div className="bg-primary-100 rounded-lg p-4 text-center hover-shadow-md transition-all">
-                <div className="text-3xl font-bold text-primary">12</div> 
+                <div className="text-3xl font-bold text-primary">{stats.scans}</div> 
                 <div className="text-sm text-gray-600">Scans this month</div>
               </div>
             </div>
             <div className="col-md-3">
               <div className="bg-primary-100 rounded-lg p-4 text-center hover-shadow-md transition-all">
-                <div className="text-3xl font-bold text-success">8</div>
+                <div className="text-3xl font-bold text-success">{stats.healthy}</div>
                 <div className="text-sm text-gray-600">Healthy choices</div>
               </div>
             </div>
             <div className="col-md-3">
               <div className="bg-primary-100 rounded-lg p-4 text-center hover-shadow-md transition-all">
-                <div className="text-3xl font-bold text-warning">3</div>
+                <div className="text-3xl font-bold text-warning">{stats.warnings}</div>
                 <div className="text-sm text-gray-600">Warnings received</div>
               </div>
             </div>
@@ -65,33 +103,30 @@ function Dashboard() {
                 <div className="col-md-4">
                   <h4 className="font-medium text-gray-700 mb-2">Health Conditions</h4>
                   <div className="d-flex flex-wrap gap-2">
-                    <span className="badge bg-danger text-white">Lactose Intolerance</span>
-                    <span className="badge bg-warning text-dark">High Blood Pressure</span>
-                    <span className="badge bg-primary text-white">Gluten Sensitivity</span>
+                    {profile?.health_conditions?.map((condition, index) => (
+                      <span key={index} className={`badge bg-${condition.color} text-white`}>{condition.name}</span>
+                    ))}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <h4 className="font-medium text-gray-700 mb-2">Dietary Preferences</h4>
                   <div className="d-flex flex-wrap gap-2">
-                    <span className="badge bg-success text-white">Low Sodium</span>
-                    <span className="badge bg-info text-white">High Protein</span>
+                    {profile?.dietary_preferences?.map((preference, index) => (
+                      <span key={index} className={`badge bg-${preference.color} text-white`}>{preference.name}</span>
+                    ))}
                   </div>
                 </div>
                 <div className="col-md-4">
                   <h4 className="font-medium text-gray-700 mb-2">Nutritional Goals</h4>
                   <div className="space-y-2">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-sm">Reduce Sugar Intake</span>
-                      <div className="progress w-32">
-                        <div className="progress-bar bg-primary" style={{ width: '66%' }}></div>
+                    {profile?.nutritional_goals?.map((goal, index) => (
+                      <div key={index} className="d-flex justify-content-between align-items-center">
+                        <span className="text-sm">{goal.name}</span>
+                        <div className="progress w-32">
+                          <div className="progress-bar bg-primary" style={{ width: `${goal.progress}%` }}></div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-sm">Increase Fiber</span>
-                      <div className="progress w-32">
-                        <div className="progress-bar bg-primary" style={{ width: '33%' }}></div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -177,36 +212,20 @@ function Dashboard() {
                 <Link to="/results" className="text-primary hover-text-primary-dark font-medium">View All</Link>
               </div>
               <div className="space-y-3">
-                <div className="d-flex align-items-center p-3 rounded-lg hover-bg-gray-50 transition-all">
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg d-flex align-items-center justify-content-center mr-3">
-                    <span className="material-symbols-outlined text-primary">breakfast_dining</span>
+                {recentScans.map((scan, index) => (
+                  <div key={index} className="d-flex align-items-center p-3 rounded-lg hover-bg-gray-50 transition-all">
+                    <div className="w-12 h-12 bg-primary-100 rounded-lg d-flex align-items-center justify-content-center mr-3">
+                      <span className="material-symbols-outlined text-primary">{scan.icon}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium">{scan.name}</h4>
+                      <p className="text-sm text-gray-600">{scan.date}</p>
+                    </div>
+                    <span className={`badge bg-${scan.health_score > 70 ? 'success' : scan.health_score < 40 ? 'danger' : 'warning'} text-white`}>
+                      {scan.health_score > 70 ? 'Healthy' : scan.health_score < 40 ? 'Warning' : 'Moderate'}
+                    </span>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">Organic Fruit Granola</h4>
-                    <p className="text-sm text-gray-600">2 days ago</p>
-                  </div>
-                  <span className="badge bg-success text-white">Healthy</span>
-                </div>
-                <div className="d-flex align-items-center p-3 rounded-lg hover-bg-gray-50 transition-all">
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg d-flex align-items-center justify-content-center mr-3">
-                    <span className="material-symbols-outlined text-primary">local_drink</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">Vitamin Water</h4>
-                    <p className="text-sm text-gray-600">5 days ago</p>
-                  </div>
-                  <span className="badge bg-warning text-dark">Moderate</span>
-                </div>
-                <div className="d-flex align-items-center p-3 rounded-lg hover-bg-gray-50 transition-all">
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg d-flex align-items-center justify-content-center mr-3">
-                    <span className="material-symbols-outlined text-primary">lunch_dining</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">Chicken Sandwich</h4>
-                    <p className="text-sm text-gray-600">1 week ago</p>
-                  </div>
-                  <span className="badge bg-danger text-white">Warning</span>
-                </div>
+                ))}
               </div>
             </div>
           </div>

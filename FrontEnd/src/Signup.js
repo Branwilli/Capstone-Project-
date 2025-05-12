@@ -22,9 +22,11 @@ function Signup({ setIsLoggedIn, setIsSetupComplete }) {
         body: JSON.stringify({ name: username, email: username, password })
       });
       if (response.ok) {
+        const data = await response.json();
         setIsLoggedIn(true);
         setIsSetupComplete(false);
         localStorage.setItem('isSetupComplete', 'false');
+        localStorage.setItem('user_id', data.user_id);
         navigate('/user-setup');
       } else {
         const data = await response.json();

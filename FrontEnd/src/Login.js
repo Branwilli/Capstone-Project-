@@ -25,6 +25,7 @@ function Login({ setIsLoggedIn, setIsSetupComplete }) {
         setIsLoggedIn(true);
         setIsSetupComplete(data.isSetupComplete);
         localStorage.setItem('isSetupComplete', data.isSetupComplete ? 'true' : 'false');
+        localStorage.setItem('user_id', data.user_id);
         navigate(data.isSetupComplete ? '/dashboard' : '/user-setup');
       } else {
         setError('Invalid username or password');

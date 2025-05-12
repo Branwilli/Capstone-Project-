@@ -12,8 +12,15 @@ function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = JSON.parse(localStorage.getItem('profile')) || {};
-        setProfile(data);
+        // Replace with actual user_id from auth/session in production
+        const userId = localStorage.getItem('user_id') || 1;
+        const response = await fetch(`/api/users/profile?user_id=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProfile(data);
+        } else {
+          setProfile({});
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -24,10 +31,20 @@ function ProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      localStorage.setItem('profile', JSON.stringify(profile));
-      setIsEditing(false);
-      setAlert('Profile updated successfully!');
-      setTimeout(() => setAlert(null), 3000);
+      // Replace with actual user_id from auth/session in production
+      const userId = localStorage.getItem('user_id') || 1;
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...profile, user_id: userId })
+      });
+      if (response.ok) {
+        setIsEditing(false);
+        setAlert('Profile updated successfully!');
+        setTimeout(() => setAlert(null), 3000);
+      } else {
+        setAlert('Error updating profile.');
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       setAlert('Error updating profile.');
