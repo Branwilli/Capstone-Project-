@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, current_app
 import mysql.connector
 import os
 import base64
@@ -6,6 +6,7 @@ import cv2
 from dotenv import load_dotenv
 import uuid
 import numpy as np
+from werkzeug.utils import secure_filename
 
 # Feedback module imports
 from Feedback.feedback import generate_suggestion, get_location
@@ -38,9 +39,11 @@ from Scoring.Lipids_Score import Lipids_Score
 from Scoring.Package import PackageComponent
 from Scoring.Score import Score
 
-
 app = Flask(__name__)
 load_dotenv()
+
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Reusable database connection
 def db_connect():
@@ -238,13 +241,25 @@ def add_recommendation():
         data = request.get_json()
         image_data = data.get('image')
 
-        if not image:
+        if not image_data:
             return jsonify({'error': 'No image provided'}), 400
         
-        image_data = data['image'].split(',')[1]  
-        image_bytes = base64.b64decode(image_data)
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        filename = secure_filename(image_data.filename)
+        image_data.save(os.path.join(current_app.config["UPLOAD_FOLDER"],filename))
+        
+        image_path = os.path.join(UPLOAD_FOLDER, image_data)
+
+        if not os.path.exists(image_path):
+            return jsonify({'error': 'Image file not found'}), 404
+        
+        print("Decoding image")
+        image = cv2.imread(image_path)
+
+        #image_data = data['image'] 
+        #image_data = image_data.split(',')[1]
+        #image_bytes = base64.b64decode(image_data)
+        #nparr = np.frombuffer(image_bytes, np.uint8)
+        #image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if image is None:
             return jsonify({"error": "Could not decode image"}), 400
