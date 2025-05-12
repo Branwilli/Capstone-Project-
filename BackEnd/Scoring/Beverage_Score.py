@@ -1,4 +1,4 @@
-from .Package import PackageComponent
+from Package import PackageComponent
 
 class Beverage_Score(PackageComponent):
     
@@ -6,12 +6,9 @@ class Beverage_Score(PackageComponent):
     def __init__(self, Nutrition_Dict):
         super().__init__(Nutrition_Dict)
         self.sweetner = self.sweetnerCheck(Nutrition_Dict)
-
-
-    def getCategory(self):
-        return self.category
+       
     
-    
+    # checks for the presence of sweetners that accrue negative pointss according to the nutriscore documentation 
     def sweetnerCheck(self, Nutrition_Dict):
         sweetners = {"Sorbitol", "Mannitol", "Isomalt", "Alitame", "Polyglycitol Syrup", 
                      "Maltitol", "Lactitol", "Xylitol", "Erythritol"}
@@ -57,65 +54,59 @@ class Beverage_Score(PackageComponent):
         # Total Negative Points
 
         # Calories
-
-        if self.calories > 390:
-            Negative+=10
-        else:
-            for cals in calories_threshold:
-                if self.calories <= cals[1]:
-                    Negative+=cals[0]
-                    break
+        try:
+            point = self.Assign_Points(self.calories, calories_threshold, calories_threshold[0][1], calories_threshold[-1][1], 'less')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative calories points cannot be completed. Unexpected Nonetype Value"
         
 
         # Saturated Fat
-
-        for fats in list(reversed(sat_fat_threshold)):
-            if self.saturated_fats > fats[1]:
-                Negative+=fats[0]
-                break
+        try:
+            point = self.Assign_Points(self.saturated_fats, sat_fat_threshold, sat_fat_threshold[0][1], sat_fat_threshold[-1][1], 'greater')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative saturated fat points cannot be completed. Unexpected Nonetype Value"
 
 
         # Sugar
-
-        if self.sugar > 11:
-            Negative+=10
-        else:
-            for sugr in sugar_threshold:
-                if self.sugar <= sugr[1]:
-                    Negative+=sugr[0]
-                    break
+        try:
+            point = self.Assign_Points(self.sugar, sugar_threshold, sugar_threshold[0][1], sugar_threshold[-1][1], 'less')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative sugar points cannot be completed. Unexpected Nonetype Value"
 
 
         # Sodium
-
-        for salt in list(reversed(sodium_threshold)):
-            if self.sodium > salt[1]:
-                Negative+=salt[0]
-                break
+        try:
+            point = self.Assign_Points(self.sodium, sodium_threshold, sodium_threshold[0][1], sodium_threshold[-1][1], 'greater')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative sodium points cannot be completed. Unexpected Nonetype Value"
 
 
         # Total Positive Points
 
         # Protein
-
-        for prot in list(reversed(protein_threshold)):
-            if self.protein > prot[1]:
-                Positive+=prot[0]
-                break
+        try:
+            point = self.Assign_Points(self.protein, protein_threshold, protein_threshold[0][1], protein_threshold[-1][1], 'greater')
+            Positive+=point
+        except TypeError:
+            return "Error: Assignment of postive protein points cannot be completed. Unexpected Nonetype Value"
 
         # Dietary Fibre
-
-        for d_fibre in list(reversed(dietary_fibre_threshold)):
-            if self.dietary_fibre > d_fibre[1]:
-                Positive+=d_fibre[0]
-                break
+        try:
+            point = self.Assign_Points(self.dietary_fibre, dietary_fibre_threshold, dietary_fibre_threshold[0][1], dietary_fibre_threshold[-1][1], 'greater')
+            Positive+=point
+        except TypeError:
+            return "Error: Assignment of positive dietary fibre points cannot be completed. Unexpected Nonetype Value"
 
         # Fruits, Vegetables, Pulses
-
-        for f_v_p in list(reversed(fvp_threshold)):
-            if self.fvp > f_v_p[1]:
-                Positive+=f_v_p[0]
-                break
+        try:
+            point = self.Assign_Points(self.fvp, fvp_threshold, fvp_threshold[0][1], fvp_threshold[-1][1], 'greater')
+            Positive+=point
+        except TypeError:
+            return "Error: Assignment of positive fvp points cannot be completed. Unexpected Nonetype Value"
         
 
         # Calculation Scheme
@@ -125,7 +116,7 @@ class Beverage_Score(PackageComponent):
         
         # Evaluation Scheme
 
-        # If NutriScore == 0, then the food item is likely "water" with no negative additives which == 'A'
+        # If NutriScore == 0, then the food item is likely "water" without negative additives which == 'A'
         if NutriScore == 0: 
             return 'A'
         if NutriScore <= 2:

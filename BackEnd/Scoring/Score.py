@@ -1,6 +1,6 @@
-from .General_Score import General_Score
-from .Lipids_Score import Lipids_Score
-from .Beverage_Score import Beverage_Score
+from General_Score import General_Score
+from Lipids_Score import Lipids_Score
+from Beverage_Score import Beverage_Score
 
 class Score:
     # NutritionValues is of type dictionary [output from the OCR]
@@ -8,7 +8,8 @@ class Score:
     def __init__(self, NutritionValues):
         self.package = NutritionValues
         
-
+    # Fallback assignment of category to 'General' if the category is not provided
+    # while accuracy is affected, it ensures an assessment can still be conducted 
     def assignCategory(self):
         # Assign Category
         try: 

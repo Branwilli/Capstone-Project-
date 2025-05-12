@@ -1,4 +1,4 @@
-from .Package import PackageComponent
+from Package import PackageComponent
 
 # This class refers to Fats/Oils/Nuts/Seeds
 class Lipids_Score(PackageComponent):
@@ -6,8 +6,6 @@ class Lipids_Score(PackageComponent):
     def __init__(self, Nutrition_Dict):
         super().__init__(Nutrition_Dict)
 
-    def getCategory(self):
-        return self.category
     
     def calculate(self):
 
@@ -45,38 +43,35 @@ class Lipids_Score(PackageComponent):
         # Total Negative Points
 
         # Calories
-
-        for cals in list(reversed(calories_threshold)):
-            if self.calories > cals[1]:
-                Negative+=cals[0]
-                break
+        try:
+            point = self.Assign_Points(self.calories, calories_threshold, calories_threshold[0][1], calories_threshold[-1][1], 'greater')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative calorie points cannot be completed. Unexpected Nonetype value."
         
 
         # Saturated Fat
-
-        if self.saturated_fats >= 64:
-            Negative+=10
-        else:
-            for fats in sat_fat_threshold:
-                if self.saturated_fats < fats[1]:
-                    Negative+=fats[0]
-                    break
+        try:
+            point = self.Assign_Points(self.saturated_fats, sat_fat_threshold, sat_fat_threshold[0][1], sat_fat_threshold[-1][1], 'less')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative saturated fat points cannot be completed. Unexpected Nonetype Value"
 
 
         # Sugar
-
-        for sugr in list(reversed(sugar_threshold)):
-            if self.sugar > sugr[1]:
-                Negative+=sugr[0]
-                break
+        try:
+            point = self.Assign_Points(self.sugar, sugar_threshold, sugar_threshold[0][1], sugar_threshold[-1][1], 'greater')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative sugar points cannot be completed. Unexpected Nonetype Value"
 
 
         # Sodium
-
-        for salt in list(reversed(sodium_threshold)):
-            if self.sodium > salt[1]:
-                Negative+=salt[0]
-                break
+        try:
+            point = self.Assign_Points(self.sodium, sodium_threshold, sodium_threshold[0][1], sodium_threshold[-1][1], 'greater')
+            Negative+=point
+        except TypeError:
+            return "Error: Assignment of negative sodium points cannot be completed. Unexpected Nonetype Value"
 
 
         # Total Positive Points
@@ -85,27 +80,28 @@ class Lipids_Score(PackageComponent):
         fibrePoints = 0
 
         # Protein
-
-        for prot in list(reversed(protein_threshold)):
-            if self.protein > prot[1]:
-                Positive+=prot[0]
-                break
+        try:
+            point = self.Assign_Points(self.protein, protein_threshold, protein_threshold[0][1], protein_threshold[-1][1], 'greater')
+            Positive+=point
+        except TypeError:
+            return "Error: Assignment of positive protein points cannot be completed. Unexpected Nonetype Value"
 
         # Dietary Fibre
-
-        for d_fibre in list(reversed(dietary_fibre_threshold)):
-            if self.dietary_fibre > d_fibre[1]:
-                fibrePoints=d_fibre[0]
-                Positive+=d_fibre[0]
-                break
-
+        try:
+            point = self.Assign_Points(self.dietary_fibre, dietary_fibre_threshold, dietary_fibre_threshold[0][1], dietary_fibre_threshold[-1][1], 'greater')
+            Positive+=point
+            fibrePoints=point
+        except TypeError:
+            return "Error: Assignment of positive dietary fibre points cannot be completed. Unexpected Nonetype Value"
+      
         # Fruits, Vegetables, Pulses
+        try:
+            point = self.Assign_Points(self.fvp, fvp_threshold, fvp_threshold[0][1], fvp_threshold[-1][1], 'greater')
+            Positive+=point
+            fvpPoints=point
+        except TypeError:
+            return "Error: Assignment of positve fvp points cannot be completed. Unexpected Nonetype Value"
 
-        for f_v_p in list(reversed(fvp_threshold)):
-            if self.fvp > f_v_p[1]:
-                fvpPoints = f_v_p[0]
-                Positive+=f_v_p[0]
-                break
 
         # Calculation Scheme
 
