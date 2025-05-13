@@ -5,8 +5,8 @@ class General_Score(PackageComponent):
     def __init__(self, Nutrition_Dict):
         super().__init__(Nutrition_Dict)
     
-    def getCategory(self):
-        return self.category
+    #def getCategory(self):
+    #    return self.category
     
     def calculate(self):
 
@@ -81,10 +81,11 @@ class General_Score(PackageComponent):
         # the max positive points for protein is set at 2.  
         try:
             point = self.Assign_Points(self.protein, protein_threshold, protein_threshold[0][1], protein_threshold[-1][1], 'greater')
-            if self.getCategory() == 'Red Meat' and point > 2:
-                Positive+=2
-            else:
-                Positive+=point
+            Positive+=point
+            #if self.getCategory() == 'Red Meat' and point > 2:
+            #    Positive+=2
+            #else:
+            #    Positive+=point
         except TypeError:
             return "Error: Assignment of positve protein points cannot be completed. Unexpected Nonetype Value"
 
