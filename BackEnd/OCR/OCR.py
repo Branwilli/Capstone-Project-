@@ -324,8 +324,7 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
                     else:
                         left_x = numeric_word['left']
                         cluster_label = kmeans.predict([[left_x]])[0]
-                        if isinstance(cluster_label, np.ndarray):
-                            cluster_label = cluster_label.item()  
+                        cluster_label = int(cluster_label) 
                         category = cluster_to_category[cluster_label]
                     categorized['Nutritional Values'][category][corrected_name] = value + unit
                     block_has_nutrients = True
