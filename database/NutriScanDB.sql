@@ -10,6 +10,21 @@ CREATE TABLE Users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- USER PROFILES
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    age INT,
+    occupation VARCHAR(255),
+    health_conditions TEXT,
+    gender VARCHAR(10),
+    daily_routine JSON,
+    goals JSON,
+    likes JSON,
+    dislikes JSON,
+    quote TEXT
+);
+
 -- PRODUCTS
 CREATE TABLE Products (
     product_id INT AUTO_INCREMENT PRIMARY KEY,

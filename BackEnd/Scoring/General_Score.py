@@ -1,4 +1,4 @@
-from Package import PackageComponent
+from .Package import PackageComponent
 
 class General_Score(PackageComponent):
 

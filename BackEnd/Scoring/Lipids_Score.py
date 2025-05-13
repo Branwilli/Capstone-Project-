@@ -1,4 +1,4 @@
-from Package import PackageComponent
+from .Package import PackageComponent
 
 # This class refers to Fats/Oils/Nuts/Seeds
 class Lipids_Score(PackageComponent):

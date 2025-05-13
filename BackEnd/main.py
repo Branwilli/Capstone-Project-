@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, current_app
+from flask import Flask, request, json, jsonify, current_app, flash, redirect, url_for
 import mysql.connector
 import os
 import base64
@@ -62,6 +62,107 @@ def db_connect():
         password=os.getenv('DB_PASSWORD'),
         database=os.getenv('DB_NAME')
     )
+
+@app.route('/api/users/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    try:
+        conn = db_connect()
+        cursor = conn.cursor()
+        query = "SELECT * FROM Users WHERE email = %s AND password = %s"
+        cursor.execute(query, (email, password))
+
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if user:  
+            return jsonify({'success': 'Login successful'}), 200
+        else:
+            return jsonify({'error': 'Invalid credentials'}), 401
+
+    except Exception as e:
+        return jsonify({'message': 'Database error', 'error': str(e)}), 500
+    
+@app.route('/api/users', methods=['POST'])
+def signup():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not name or not email or not password:
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    try:
+        connection = db_connect()
+        cursor = connection.cursor()
+
+        # Check if user already exists
+        check_query = "SELECT * FROM users WHERE email = %s"
+        cursor.execute(check_query, (email,))
+        if cursor.fetchone():
+            return jsonify({'message': 'User already exists'}), 409
+
+        # Insert new user
+        insert_query = "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)"
+        cursor.execute(insert_query, (name, email, password))
+        connection.commit()
+
+        user_id = cursor.lastrowid
+        return jsonify({'message': 'User created successfully', 'user_id': user_id}), 201
+
+    except Exception as e:
+        return jsonify({'message': f'Database error: {str(e)}'}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+@app.route('/api/users/profile', methods=['POST'])
+def save_user_profile():
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        age = data.get('age')
+        occupation = data.get('occupation')
+        health_conditions = data.get('healthConditions')
+        gender = data.get('gender')
+        daily_routine = json.dumps(data.get('dailyRoutine', []))
+        goals = json.dumps(data.get('goals', []))
+        likes = json.dumps(data.get('likes', []))
+        dislikes = json.dumps(data.get('dislikes', []))
+        quote = data.get('quote')
+
+        conn = db_connect()
+        cursor = conn.cursor()
+
+        insert_query = """
+        INSERT INTO user_profiles 
+        (name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        values = (name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote)
+
+        cursor.execute(insert_query, values)
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'message': 'Profile saved successfully'}), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': 'Failed to save profile'}), 500
 
 # Get all users
 @app.route("/api/users", methods=["GET"])
@@ -373,4 +474,4 @@ def submit_feedback():
     return jsonify({"message": "Feedback submitted"}), 201
 
 if __name__ == '__main__':
-    app.run(debug=True, port=int(os.getenv('PORT', 8081)))
+    app.run(debug=True, port=int(os.getenv('PORT', 3000)))
