@@ -422,6 +422,7 @@ def add_recommendation():
         feedback['image_url'] = image_url
         return jsonify(feedback)
     except Exception as e:
+        print('Scanning error: ', e)
         return jsonify({"error": str(e)}), 500
 
 # Delete a recommendation
