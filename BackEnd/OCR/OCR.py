@@ -298,15 +298,16 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
                 n_clusters = 1
             else:
                 kmeans = KMeans(n_clusters=optimal_k, random_state=42).fit(left_coords)
-                col_centers = sorted(kmeans.cluster_centers_.flatten())
-                if min([col_centers[i+1] - col_centers[i] for i in range(optimal_k-1)]) < 50:
+                col_centers = np.sort(kmeans.cluster_centers_.flatten())
+                col_diffs = np.diff(col_centers)
+                if col_diffs.size > 0 and np.min(col_diffs) < 50:
                     n_clusters = 1
                 else:
                     n_clusters = optimal_k
                     if n_clusters > 2:
                         n_clusters = 2
                         kmeans = KMeans(n_clusters=2, random_state=42).fit(left_coords)
-                        col_centers = sorted(kmeans.cluster_centers_.flatten())
+                        col_centers = np.sort(kmeans.cluster_centers_.flatten())
         block_has_nutrients = False
         if n_clusters == 1:
             category_map = lambda x: 'Per Serving'
@@ -323,6 +324,8 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
                     else:
                         left_x = numeric_word['left']
                         cluster_label = kmeans.predict([[left_x]])[0]
+                        if isinstance(cluster_label, np.ndarray):
+                            cluster_label = cluster_label.item()  
                         category = cluster_to_category[cluster_label]
                     categorized['Nutritional Values'][category][corrected_name] = value + unit
                     block_has_nutrients = True
