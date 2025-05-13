@@ -222,7 +222,7 @@ def is_numeric_token(text: str) -> bool:
     if text.startswith("I%"):
         text = "1%" + text[2:]
     pattern = r'^(\d+\.?\d*|<\d+)\s*(g|mg|mcg|%|kcal)?$'
-    return re.match(pattern, text, re.IGNORECASE) is not None
+    return bool(re.match(pattern, text, re.IGNORECASE))
 
 def extract_line_nutrients(words: List[Dict[str, Any]]) -> List[Tuple[str, str, str, Dict[str, Any]]]:
     nutrients = []
@@ -300,7 +300,7 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
                 kmeans = KMeans(n_clusters=optimal_k, random_state=42).fit(left_coords)
                 col_centers = np.sort(kmeans.cluster_centers_.flatten())
                 col_diffs = np.diff(col_centers)
-                if col_diffs.size > 0 and np.min(col_diffs) < 50:
+                if col_diffs.any() > 0 and np.min(col_diffs) < 50:
                     n_clusters = 1
                 else:
                     n_clusters = optimal_k
@@ -336,6 +336,7 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
     return categorized
 
 def process_image_from_array(
+    image: np.ndarray,
     input_mode: Optional[str] = None,
     output_dir: Optional[str] = None,
     text_output_path: Optional[str] = None,
@@ -343,8 +344,8 @@ def process_image_from_array(
     ocr_conf_threshold: int = 20,
     line_conf_threshold: int = 50
 ) -> Optional[Dict[str, str]]:
-    image = None
-    while True:
+    #image = None
+    '''while True:
         mode = input_mode or input("Enter 'c' to capture an image or 's' to select an image: ").strip().lower()
         if mode == 'c':
             image = capture_image()
@@ -355,17 +356,20 @@ def process_image_from_array(
         else:
             logging.warning("Invalid choice, please enter 'c' or 's'.")
             if input_mode:
-                return None
+                return None'''
+    print("image: ", image)
     if image is None:
         logging.error("No image to process.")
         return None
     output_dir = output_dir or os.path.join(os.path.expanduser("~"), "Downloads")
     preprocessed_image = preprocess_image(image, target_size=preprocess_target_size, output_path=output_dir)
+    print("Preprocessed Image: ", preprocess_image)
     if preprocessed_image is None:
         logging.error("Preprocessing failed.")
         return None
     recognized_text, boxes, ocr_data = extract_text(preprocessed_image, conf_threshold=ocr_conf_threshold)
     corrected_text = correct_ocr_errors(recognized_text)
+    print("Corrected Text: ", corrected_text)
     documents_dir = os.path.join(os.path.expanduser("~"), "Documents")
     text_output_path = text_output_path or os.path.join(documents_dir, "corrected_text.txt")
     os.makedirs(os.path.dirname(text_output_path), exist_ok=True)
@@ -376,8 +380,11 @@ def process_image_from_array(
     except Exception as e:
         logging.error(f"Failed to save corrected text: {e}")
     line_data = extract_lines(ocr_data, conf_threshold=line_conf_threshold)
+    print("Line Data: ", line_data)
     sections = layout_analysis(line_data)
     categorized = categorize_text(sections)
+    print("Sections: ", sections)
+    print("Categories: ", categorized)
     final_nutrients = categorized['Nutritional Values']['Per Serving']
     # Use .any()/.all() for numpy arrays, and len() for dicts
     per_container = categorized['Nutritional Values']['Per Container']

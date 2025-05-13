@@ -402,20 +402,18 @@ def add_recommendation():
             cv2.imwrite(file_path, image)
             image_url = file_path
 
-        if image is None:
+        if image is None or not isinstance(image, np.ndarray):
             return jsonify({"error": "Could not decode image"}), 400
 
         nutrition_data = process_image_from_array(image)
-        if not nutrition_data.get('nutrients'):
+        print(nutrition_data)
+        if (not nutrition_data):
             return jsonify({"error": "No nutrients detected in image"}), 400
 
         Product_Name = request.form.get('productInfo') if request.content_type and request.content_type.startswith('multipart/form-data') else data.get('productInfo', 'Unknown')
 
         # Score expects a dict, not a set
-        score = Score({
-            'nutrients': nutrition_data['nutrients'],
-            'product_name': Product_Name
-        })
+        score = Score(nutrition_data, Product_Name)
         score_result = score.evaluate()
         feedback = generate_suggestion(score_result, Product_Name)
         # Add image_url to response for frontend to use in /api/scans
