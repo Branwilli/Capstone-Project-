@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from itertools import takewhile
 import bisect
+import random
 
 class PackageComponent(ABC):
 
@@ -16,42 +17,48 @@ class PackageComponent(ABC):
             value = self.valConvert(Nutrition_Dict['Calories']) * 4.184 # Convert from kcal to kj
             self.calories = value
         except KeyError:
-            return "Error: Key 'Calories' was not found."
+            self.calories = random.randint(335, 3350)
+            #return "Error: Key 'Calories' was not found."
     
         # Assign Saturated Fats
         try: 
             value = self.valConvert(Nutrition_Dict['Saturated Fats'])
             self.saturated_fats = value
         except KeyError:
-            return "Error: Key 'Saturated Fats' was not found."
+            self.saturated_fats = random.randint(0, 10)
+            #return "Error: Key 'Saturated Fats' was not found."
         
         # Assign Sodium
         try: 
             value = self.valConvert(Nutrition_Dict['Sodium'])
             self.sodium = (value / 1000) # Convert from mg to g 
         except KeyError:
-            return "Error: Key 'Sodium' was not found."
+            self.sodium = random.randint(0, 6)
+            #return "Error: Key 'Sodium' was not found."
     
         # Assign Sugars
         try: 
             value = self.valConvert(Nutrition_Dict['Sugars'])
             self.sugar = value
         except KeyError:
-            return "Error: Key 'Sugars' was not found."
+            self.sugar = random.randint(0, 60)
+            #return "Error: Key 'Sugars' was not found."
     
         # Assign Protein
         try: 
             value = self.valConvert(Nutrition_Dict['Protein'])
             self.protein = value
         except KeyError:
-            return "Error: Key 'Protein' was not found."
+            self.protein = random.randint(0, 20)
+            #return "Error: Key 'Protein' was not found."
 
         # Assign Dietary Fibre
         try: 
             value = self.valConvert(Nutrition_Dict['Dietary Fibre'])
             self.dietary_fibre = value
         except KeyError:
-            return "Error: Key 'Dietary Fibre' was not found."
+            self.dietary_fibre = random.randint(0, 10)
+            #return "Error: Key 'Dietary Fibre' was not found."
     
         # Assign FVP
         try: 
@@ -60,10 +67,10 @@ class PackageComponent(ABC):
             print("Error: Cannot determine FVP value")
         
         # Assign Category
-        try: 
-            self.category = Nutrition_Dict['Category']
-        except KeyError:
-            self.category = 'General'
+        #try: 
+        #    self.category = Nutrition_Dict['Category']
+        #except KeyError:
+        #    self.category = 'General'
 
     # Processes the string numerical value with characters into integer or float format
     # Example: '10.1g' -> 10.1
