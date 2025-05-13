@@ -93,27 +93,6 @@ def resize_image(image: np.ndarray, fx: float = 1.5, fy: float = 1.5) -> np.ndar
 def convert_to_grayscale(image: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-def detect_roi(image: np.ndarray, min_area: int = 100) -> Tuple[int, int, int, int]:
-    try:
-        contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # Error fix 
-        if contours is None or len(contours) == 0:
-            return (0, 0, image.shape[1], image.shape[0])
-        min_x, min_y = image.shape[1], image.shape[0]
-        max_x, max_y = 0, 0
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if area > min_area:
-                x, y, w, h = cv2.boundingRect(cnt)
-                min_x = min(min_x, x)
-                min_y = min(min_y, y)
-                max_x = max(max_x, x + w)
-                max_y = max(max_y, y + h)
-        return (min_x, min_y, max_x - min_x, max_y - min_y) if min_x < max_x and min_y < max_y else (0, 0, image.shape[1], image.shape[0])
-    except Exception as e:
-        logging.error(f"Error detecting ROI: {e}")
-        return (0, 0, image.shape[1], image.shape[0])
-
 def apply_threshold(image: np.ndarray, block_size: int = 15, c: int = 4) -> np.ndarray:
     kernel = np.ones((2, 2), np.uint8)
     image = cv2.dilate(image, kernel, iterations=1)
@@ -380,10 +359,7 @@ def process_image_from_array(
     if preprocessed_image is None:
         logging.error("Preprocessing failed.")
         return None
-    roi_box = detect_roi(preprocessed_image)
-    x, y, w, h = roi_box
-    cropped_image = preprocessed_image[y:y+h, x:x+w]
-    recognized_text, boxes, ocr_data = extract_text(cropped_image, conf_threshold=ocr_conf_threshold)
+    recognized_text, boxes, ocr_data = extract_text(preprocessed_image, conf_threshold=ocr_conf_threshold)
     corrected_text = correct_ocr_errors(recognized_text)
     documents_dir = os.path.join(os.path.expanduser("~"), "Documents")
     text_output_path = text_output_path or os.path.join(documents_dir, "corrected_text.txt")
