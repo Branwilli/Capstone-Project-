@@ -344,20 +344,7 @@ def process_image_from_array(
     ocr_conf_threshold: int = 20,
     line_conf_threshold: int = 50
 ) -> Optional[Dict[str, str]]:
-    #image = None
-    '''while True:
-        mode = input_mode or input("Enter 'c' to capture an image or 's' to select an image: ").strip().lower()
-        if mode == 'c':
-            image = capture_image()
-            break
-        elif mode == 's':
-            image = select_image()
-            break
-        else:
-            logging.warning("Invalid choice, please enter 'c' or 's'.")
-            if input_mode:
-                return None'''
-    print("image: ", image)
+    
     if image is None:
         logging.error("No image to process.")
         return None
@@ -380,11 +367,8 @@ def process_image_from_array(
     except Exception as e:
         logging.error(f"Failed to save corrected text: {e}")
     line_data = extract_lines(ocr_data, conf_threshold=line_conf_threshold)
-    print("Line Data: ", line_data)
     sections = layout_analysis(line_data)
     categorized = categorize_text(sections)
-    print("Sections: ", sections)
-    print("Categories: ", categorized)
     final_nutrients = categorized['Nutritional Values']['Per Serving']
     # Use .any()/.all() for numpy arrays, and len() for dicts
     per_container = categorized['Nutritional Values']['Per Container']
@@ -400,7 +384,7 @@ def process_image_from_array(
         is_per_container_nonempty = len(per_container) > 0
     if is_final_nutrients_empty and is_per_container_nonempty:
         final_nutrients = per_container
-    #print("Final Nutrients:", final_nutrients)
+    
     return final_nutrients
 
 #if __name__ == "__main__":

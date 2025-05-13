@@ -38,7 +38,7 @@ client = instructor.from_gemini(genai.GenerativeModel(model_name="models/gemini-
 df = pd.read_csv(os.path.join(os.path.dirname(__file__), '../Food_Dataset_Jamaica.csv')) # Load the food dataset for Jamaica
 
 
-def generate_suggestion(score, product, nutrients_issue=None):
+def generate_suggestion(score, product, nutrients_issue):
     """
     Generates a health-based food suggestion by:
     1. Checking if the product exists in the dataset.

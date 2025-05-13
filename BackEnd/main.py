@@ -66,6 +66,16 @@ def db_connect():
         database=os.getenv('DB_NAME')
     )
 
+def get_conditions(user_id):
+    conn = db_connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT health_conditions FROM user_profiles WHERE id = %s", (user_id,))
+    conditions = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return conditions
+    pass
+
 @app.route('/api/users/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -385,6 +395,7 @@ def add_recommendation():
             image_file.save(file_path)
             image = cv2.imread(file_path)
             image_url = file_path  # Save the file path for response
+            user_id = request.form.get('user_id')
         else:
             # JSON with base64 image
             data = request.get_json()
@@ -401,12 +412,12 @@ def add_recommendation():
             file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
             cv2.imwrite(file_path, image)
             image_url = file_path
+            user_id = data.get('user_id')
 
         if image is None or not isinstance(image, np.ndarray):
             return jsonify({"error": "Could not decode image"}), 400
 
         nutrition_data = process_image_from_array(image)
-        print(nutrition_data)
         if (not nutrition_data):
             return jsonify({"error": "No nutrients detected in image"}), 400
 
@@ -415,9 +426,11 @@ def add_recommendation():
         # Score expects a dict, not a set
         score = Score(nutrition_data, Product_Name)
         score_result = score.evaluate()
-        feedback = generate_suggestion(score_result, Product_Name)
+
+        nutrients_issue = get_conditions(user_id)
+        feedback = generate_suggestion(score_result, Product_Name, nutrients_issue)
         # Add image_url to response for frontend to use in /api/scans
-        feedback['image_url'] = image_url
+        #feedback['image_url'] = image_url
         return jsonify(feedback)
     except Exception as e:
         print('Scanning error: ', e)
