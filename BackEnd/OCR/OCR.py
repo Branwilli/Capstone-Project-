@@ -1,4 +1,5 @@
 import os
+os.environ["OMP_NUM_THREADS"] = "1"
 import re
 import difflib
 import json
@@ -95,7 +96,8 @@ def convert_to_grayscale(image: np.ndarray) -> np.ndarray:
 def detect_roi(image: np.ndarray, min_area: int = 100) -> Tuple[int, int, int, int]:
     try:
         contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if not contours:
+        # Error fix 
+        if contours is None or len(contours) == 0:
             return (0, 0, image.shape[1], image.shape[0])
         min_x, min_y = image.shape[1], image.shape[0]
         max_x, max_y = 0, 0
