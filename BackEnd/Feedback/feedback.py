@@ -7,6 +7,7 @@ from typing import List, Dict
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import pandas as pd
+from .rating import update_stars, submit_rating, show_rating_panel
 
 load_dotenv()
 
