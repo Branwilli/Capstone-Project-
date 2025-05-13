@@ -8,6 +8,9 @@ import uuid
 import numpy as np
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
+import logging
+
+logging.basicConfig(level=logging.WARNING)
 
 # Feedback module imports
 from Feedback.feedback import generate_suggestion, get_location
@@ -79,15 +82,29 @@ def login():
         cursor.execute(query, (email, password))
 
         user = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
         if user:  
-            return jsonify({'success': 'Login successful'}), 200
+            profile_query = "SELECT COUNT(*) AS count FROM user_profiles WHERE id = %s"
+            cursor.execute(profile_query, (int(user[0]),))
+            profile = cursor.fetchone()
+            is_setup_complete = int(profile[0]) > 0
+            
+            cursor.close()
+            conn.close()
+
+            return jsonify({
+                'success': 'Login successful',
+                'user_id': int(user[0]),
+                'profile_exists': is_setup_complete
+            }), 200
+            
         else:
+            cursor.close()
+            conn.close()
             return jsonify({'error': 'Invalid credentials'}), 401
 
     except Exception as e:
+        print("Login error: ", e)
         return jsonify({'message': 'Database error', 'error': str(e)}), 500
     
 @app.route('/api/users', methods=['POST'])

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Signup({ setIsLoggedIn, setIsSetupComplete }) {
   const navigate = useNavigate();
+  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,7 +20,7 @@ function Signup({ setIsLoggedIn, setIsSetupComplete }) {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: username, email: username, password })
+        body: JSON.stringify({ name, email: username, password })
       });
       if (response.ok) {
         const data = await response.json();
@@ -41,6 +42,10 @@ function Signup({ setIsLoggedIn, setIsSetupComplete }) {
     <div className="login pt-16 max-w-md mx-auto">
       <h2 className="text-2xl font-bold text-secondary mb-4">Sign Up</h2>
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="mb-4">
+          <label className="form-label" htmlFor="name">Name</label>
+          <input className="form-control" id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
         <div className="mb-4">
           <label className="form-label" htmlFor="username">Email</label>
           <input className="form-control" id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
