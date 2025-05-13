@@ -326,7 +326,10 @@ def categorize_text(clustered_sections: Dict[int, List[Dict[str, Any]]]) -> Dict
                         cluster_label = kmeans.predict([[left_x]])[0]
                         cluster_label = int(cluster_label) 
                         category = cluster_to_category[cluster_label]
-                    categorized['Nutritional Values'][category][corrected_name] = value + unit
+                    # Ensure value and unit are strings and not numpy types
+                    value_str = str(value)
+                    unit_str = str(unit)
+                    categorized['Nutritional Values'][category][corrected_name] = value_str + unit_str
                     block_has_nutrients = True
         if block_has_nutrients:
             categorized['table_count'] += 1
@@ -376,9 +379,21 @@ def process_image_from_array(
     sections = layout_analysis(line_data)
     categorized = categorize_text(sections)
     final_nutrients = categorized['Nutritional Values']['Per Serving']
-    if not final_nutrients and categorized['Nutritional Values']['Per Container']:
-        final_nutrients = categorized['Nutritional Values']['Per Container']
-    print("Final Nutrients:", final_nutrients)
+    # Use .any()/.all() for numpy arrays, and len() for dicts
+    per_container = categorized['Nutritional Values']['Per Container']
+    is_final_nutrients_empty = False
+    if isinstance(final_nutrients, np.ndarray):
+        is_final_nutrients_empty = not final_nutrients.any()
+    else:
+        is_final_nutrients_empty = len(final_nutrients) == 0
+    is_per_container_nonempty = False
+    if isinstance(per_container, np.ndarray):
+        is_per_container_nonempty = per_container.any()
+    else:
+        is_per_container_nonempty = len(per_container) > 0
+    if is_final_nutrients_empty and is_per_container_nonempty:
+        final_nutrients = per_container
+    #print("Final Nutrients:", final_nutrients)
     return final_nutrients
 
 #if __name__ == "__main__":
