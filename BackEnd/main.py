@@ -74,7 +74,22 @@ def get_conditions(user_id):
     cursor.close()
     conn.close()
     return conditions
-    pass
+
+def add_results(user_id, feedback):
+    conn = db_connect()
+    cursor = conn.cursor()
+    insert_query = """
+        INSERT INTO recommendations (user_id, recommendation_reason)
+        VALUES (%s, %s)
+    """
+    cursor.execute(insert_query, (
+        user_id,
+        feedback # or a JSON dump of all feedback if needed
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 
 @app.route('/api/users/login', methods=['POST'])
 def login():
@@ -246,7 +261,7 @@ def get_user_scans(user_id):
 def add_scan():
     data = request.json
     db = db_connect()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
     sql = "INSERT INTO Scans (user_id, product_id, ocr_text, image_url) VALUES (%s, %s, %s, %s)"
     values = (data["user_id"], data["product_id"], data["ocr_text"], data["image_url"])
     cursor.execute(sql, values)
@@ -431,10 +446,39 @@ def add_recommendation():
         feedback = generate_suggestion(score_result, Product_Name, nutrients_issue)
         # Add image_url to response for frontend to use in /api/scans
         #feedback['image_url'] = image_url
-        return jsonify(feedback)
+        
+        add_results(user_id, feedback['reasoning'])
+
+        return jsonify(feedback, image_url)
     except Exception as e:
         print('Scanning error: ', e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/recommendations", methods=['GET'])
+def get_recommendations():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+
+        if not user_id:
+            return jsonify({'error': 'Missing user_id parameter'}), 400
+        
+        conn = db_connect()
+        cursor = conn.cursor(dictionary=True)
+
+        query = "SELECT * FROM recommendations WHERE user_id = %s ORDER BY created_at DESC"
+        cursor.execute(query, (user_id,))
+        results = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(results)
+
+    except Exception as e:
+        print("Database fetch error:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 # Delete a recommendation
 @app.route("/api/recommendations/<int:recommendation_id>/<int:user_id>", methods=["DELETE"])

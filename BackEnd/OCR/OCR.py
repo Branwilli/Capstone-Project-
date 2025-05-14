@@ -350,13 +350,13 @@ def process_image_from_array(
         return None
     output_dir = output_dir or os.path.join(os.path.expanduser("~"), "Downloads")
     preprocessed_image = preprocess_image(image, target_size=preprocess_target_size, output_path=output_dir)
-    print("Preprocessed Image: ", preprocess_image)
+    
     if preprocessed_image is None:
         logging.error("Preprocessing failed.")
         return None
     recognized_text, boxes, ocr_data = extract_text(preprocessed_image, conf_threshold=ocr_conf_threshold)
     corrected_text = correct_ocr_errors(recognized_text)
-    print("Corrected Text: ", corrected_text)
+    
     documents_dir = os.path.join(os.path.expanduser("~"), "Documents")
     text_output_path = text_output_path or os.path.join(documents_dir, "corrected_text.txt")
     os.makedirs(os.path.dirname(text_output_path), exist_ok=True)

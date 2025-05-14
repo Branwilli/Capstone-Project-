@@ -69,8 +69,9 @@ def generate_suggestion(score, product, nutrients_issue):
     )
 
     # Print the formatted response output
-    for field, value in response.model_dump().items():
-        print(f"{field.replace('_', ' ').title()}: {value}\n")
+    '''for field, value in response.model_dump().items():
+        print(f"{field.replace('_', ' ').title()}: {value}\n")'''
+    return response.dict()
 
 
 def get_location():

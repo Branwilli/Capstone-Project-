@@ -33,8 +33,10 @@ function ScanPage() {
     try {
       // 1. POST to recommendations for analysis and image upload
       const formData = new FormData();
+      const userId = localStorage.getItem('user_id');
       formData.append('image', imageFile);
       formData.append('productInfo', productName);
+      formData.append('user_id', userId);
       const recRes = await fetch('/api/recommendations', {
         method: 'POST',
         body: formData
@@ -43,7 +45,6 @@ function ScanPage() {
       if (!recRes.ok) throw new Error(recData.message || recData.error || 'Recommendation failed');
       
       const imageUrl = recData.image_url || '';
-      const userId = localStorage.getItem('user_id');
       // If product_id is returned from recData, use it; else fallback to 1
       const productId = recData.product_id || 1;
       const scanRes = await fetch('/api/scans', {

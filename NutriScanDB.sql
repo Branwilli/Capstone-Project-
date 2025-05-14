@@ -33,7 +33,7 @@ CREATE TABLE Products (
 CREATE TABLE Scans (
     scan_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    product_id INT,
+    product_id INT AUTO_INCREMENT,
     ocr_text TEXT,
     image_url VARCHAR(255),
     scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -45,8 +45,8 @@ CREATE TABLE Scans (
 CREATE TABLE Recommendations (
     recommendation_id INT AUTO_INCREMENT,
     user_id INT,
-    product_id INT,
-    recommended_product_id INT,
+    product_id INT AUTO_INCREMENT,
+    recommended_product_id INT AUTO_INCREMENT,
     recommendation_reason TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (recommendation_id, user_id),

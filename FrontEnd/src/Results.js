@@ -19,7 +19,7 @@ function Results() {
         setLoading(true);
         setError(null);
         const response = await fetch('/api/recommendations', {
-          method: 'POST',
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json'
           },
@@ -53,8 +53,15 @@ function Results() {
       {resultData && (
         <div className="row">
           <div className="col-md-6">
-            <ScoreCard nutriscores={resultData.nutriscores} chemicalRisk={resultData.chemicalRisk} />
-            <NutrientChart data={resultData} />
+            <ScoreCard nutriscores={resultData.score} chemicalRisk={resultData.chemicalRisk} />
+            <NutrientChart data={resultData} /> 
+            {resultData.image_url && (
+              <img 
+                src={resultData.image_url} 
+                alt="Scanned product" 
+                className="mt-4 rounded shadow-md max-w-full"
+              />
+            )}
           </div>
           <div className="col-md-6">
             <ResultsSection data={resultData} />
