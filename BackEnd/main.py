@@ -417,14 +417,10 @@ def add_recommendation():
             image_data = data.get('image')
             if not image_data:
                 return jsonify({'error': 'No image provided'}), 400
-            import base64
-            import numpy as np
-            import uuid
             if image_data.startswith('data:image'):
                 image_data = image_data.split(',')[1]
             image_bytes = base64.b64decode(image_data)
             nparr = np.frombuffer(image_bytes, np.uint8)
-            import cv2
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             filename = f"scan_{uuid.uuid4().hex}.jpg"
             file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
@@ -448,7 +444,7 @@ def add_recommendation():
         nutrients_issue = get_conditions(user_id)
         feedback = generate_suggestion(score_result, product_info, nutrients_issue)
         add_results(user_id, feedback['reasoning'])
-
+        
         # Ensure all extracted nutrition facts are sent in the 'data' prop
         return jsonify({**feedback, "image_url": image_url, 'productName': product_info, 'data': nutrition_data})
     except Exception as e:
