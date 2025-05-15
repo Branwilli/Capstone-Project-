@@ -31,7 +31,7 @@ function ScanPage() {
     if (!productName.trim()) return alert('Please enter a product name.');
     setIsUploading(true);
     try {
-      // 1. POST to recommendations for analysis and image upload
+      // POST to recommendations for analysis and image upload
       const formData = new FormData();
       const userId = localStorage.getItem('user_id');
       formData.append('image', imageFile);

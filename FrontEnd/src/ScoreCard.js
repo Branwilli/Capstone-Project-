@@ -3,10 +3,9 @@ import React from 'react';
 // Make sure these values are fetched from the backend (e.g., after a scan or from a results API)
 // and passed down to ScoreCard when rendering.
 
-function ScoreCard({ nutriscores, chemicalRisk }) {
+function ScoreCard({ nutriscores }) {
   // Use fallback values if props are missing
   const score = nutriscores || '-';
-  const risk = chemicalRisk !== undefined && chemicalRisk !== null ? chemicalRisk : '-';
   const scoreColor = score === 'A' ? '#4CAF50' : score === 'E' ? '#F44336' : '#FFC107';
   return (
     <div className="card shadow-sm mb-3">
@@ -16,10 +15,6 @@ function ScoreCard({ nutriscores, chemicalRisk }) {
           <div>
             <h3 style={{ color: scoreColor, fontWeight: 'bold' }}>{score}</h3>
             <p>Nutri-Score</p>
-          </div>
-          <div>
-            <h3>{risk}</h3>
-            <p>Chemical Risk (1-5)</p>
           </div>
         </div>
       </div>

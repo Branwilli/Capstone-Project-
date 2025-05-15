@@ -10,18 +10,22 @@ import {
   Chart
 } from 'chart.js';
 
-// TODO: The 'data' prop should be populated from the backend (e.g., after a scan or from a results API)
-// Ensure the parent component fetches the nutritional data from the backend and passes it here.
 
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function NutrientChart({ data }) {
+  const ignoreKeys = ["vitamins", "name", "brand", "product_id", "id"];
+  const nutrientEntries = Object.entries(data).filter(
+    ([key, value]) => !ignoreKeys.includes(key) && typeof value === 'number' && !isNaN(value)
+  );
   const chartData = {
-    labels: ['Sodium', 'Sugar', 'Fats', 'Protein'],
+    labels: nutrientEntries.map(([key]) => key.charAt(0).toUpperCase() + key.slice(1)),
     datasets: [{
       label: 'Nutritional Values',
-      data: [data.sodium, data.sugar, data.fats, data.protein],
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
+      data: nutrientEntries.map(([, value]) => value),
+      backgroundColor: [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8BC34A', '#00BCD4', '#E91E63', '#607D8B'
+      ].slice(0, nutrientEntries.length),
     }],
   };
   const options = { scales: { y: { beginAtZero: true } } };

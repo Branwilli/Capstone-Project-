@@ -1,9 +1,10 @@
 import React from 'react';
 
-// TODO: The 'data' prop should be populated from the backend (e.g., after a scan or from a results API)
-// Ensure the parent component fetches the nutritional and ingredient data from the backend and passes it here.
-
 function ResultsSection({ data }) {
+  const ignoreKeys = ["vitamins", "name", "brand", "product_id", "id"];
+  const nutrientEntries = Object.entries(data).filter(
+    ([key, value]) => !ignoreKeys.includes(key) && value !== undefined && value !== null && value !== ''
+  );
   return (
     <div className="card shadow-sm mb-3">
       <div className="card-body">
@@ -16,19 +17,34 @@ function ResultsSection({ data }) {
             </tr>
           </thead>
           <tbody>
-            <tr><td>Sodium</td><td>{data.sodium || 0} mg</td></tr>
-            <tr><td>Sugar</td><td>{data.sugar || 0} g</td></tr>
-            <tr><td>Fats</td><td>{data.fats || 0} g</td></tr>
-            <tr><td>Protein</td><td>{data.protein || 0} g</td></tr>
-            <tr><td>Vitamins</td><td>{data.vitamins ? data.vitamins.join(', ') : 'None'}</td></tr>
+            {nutrientEntries.map(([key, value]) => {
+              let unit = '';
+              if (key.toLowerCase().includes('sodium')) unit = 'mg';
+              else if (["sugar", "fats", "protein", "cholesterol", "calcium", "iron", "potassium"].some(k => key.toLowerCase().includes(k))) unit = 'g';
+              const label = key.charAt(0).toUpperCase() + key.slice(1);
+              return (
+                <tr key={key}>
+                  <td>{label}</td>
+                  <td>{value} {unit}</td>
+                </tr>
+              );
+            })}
+            {data.vitamins && typeof data.vitamins === 'object' && !Array.isArray(data.vitamins) && (
+              Object.entries(data.vitamins).map(([vitamin, amount]) => (
+                <tr key={"vitamin-" + vitamin}>
+                  <td>{vitamin.charAt(0).toUpperCase() + vitamin.slice(1)}</td>
+                  <td>{amount}</td>
+                </tr>
+              ))
+            )}
+            {data.vitamins && (Array.isArray(data.vitamins) || typeof data.vitamins === 'string') && (
+              <tr>
+                <td>Vitamins</td>
+                <td>{Array.isArray(data.vitamins) ? data.vitamins.join(', ') : data.vitamins}</td>
+              </tr>
+            )}
           </tbody>
         </table>
-        <h5 className="card-title mt-3">Ingredients</h5>
-        <ul className="list-group">
-          {data.ingredients?.map((item, index) => (
-            <li key={index} className="list-group-item">{item}</li>
-          ))}
-        </ul>
       </div>
     </div>
   );

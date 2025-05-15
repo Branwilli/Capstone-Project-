@@ -28,8 +28,8 @@ function Results() {
       ) : (
         <div className="row">
           <div className="col-md-6">
-            <ScoreCard nutriscores={resultData.score} chemicalRisk={resultData.chemicalRisk} />
-            <NutrientChart data={resultData} />
+            <ScoreCard nutriscores={resultData.score} />
+            <NutrientChart data={resultData.data || {}} />
             {resultData.image_url && (
               <img
                 src={resultData.image_url}
@@ -39,7 +39,7 @@ function Results() {
             )}
           </div>
           <div className="col-md-6">
-            <ResultsSection data={resultData} />
+            <ResultsSection data={resultData.data || {}} />
             <FeedbackSection feedback={resultData.reasoning} />
           </div>
         </div>

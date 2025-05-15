@@ -401,59 +401,60 @@ def add_recommendation():
     try:
         # Accept both JSON (base64 image) and multipart/form-data (file upload)
         if request.content_type and request.content_type.startswith('multipart/form-data'):
-            # File upload
             if 'image' not in request.files:
                 return jsonify({'error': 'No image file provided'}), 400
             image_file = request.files['image']
             filename = secure_filename(image_file.filename)
             file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
             image_file.save(file_path)
+            import cv2
             image = cv2.imread(file_path)
-            image_url = file_path  # Save the file path for response
+            image_url = file_path
             user_id = request.form.get('user_id')
+            product_info = request.form.get('productInfo', 'Unknown')
         else:
-            # JSON with base64 image
             data = request.get_json()
             image_data = data.get('image')
             if not image_data:
                 return jsonify({'error': 'No image provided'}), 400
+            import base64
+            import numpy as np
+            import uuid
             if image_data.startswith('data:image'):
                 image_data = image_data.split(',')[1]
             image_bytes = base64.b64decode(image_data)
             nparr = np.frombuffer(image_bytes, np.uint8)
+            import cv2
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            # Save the image to disk for consistency
             filename = f"scan_{uuid.uuid4().hex}.jpg"
             file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
             cv2.imwrite(file_path, image)
             image_url = file_path
             user_id = data.get('user_id')
+            product_info = data.get('productInfo', 'Unknown')
 
         if image is None or not isinstance(image, np.ndarray):
             return jsonify({"error": "Could not decode image"}), 400
 
+        # OCR extraction
         nutrition_data = process_image_from_array(image)
-        if (not nutrition_data):
+        if not nutrition_data:
             return jsonify({"error": "No nutrients detected in image"}), 400
 
-        Product_Name = request.form.get('productInfo') if request.content_type and request.content_type.startswith('multipart/form-data') else data.get('productInfo', 'Unknown')
-
         # Score expects a dict, not a set
-        score = Score(nutrition_data, Product_Name)
+        score = Score(nutrition_data, product_info)
         score_result = score.evaluate()
 
         nutrients_issue = get_conditions(user_id)
-        feedback = generate_suggestion(score_result, Product_Name, nutrients_issue)
-        # Add image_url to response for frontend to use in /api/scans
-        #feedback['image_url'] = image_url
-        
+        feedback = generate_suggestion(score_result, product_info, nutrients_issue)
         add_results(user_id, feedback['reasoning'])
 
-        return jsonify({**feedback, "image_url": image_url, 'productName': Product_Name})
+        # Ensure all extracted nutrition facts are sent in the 'data' prop
+        return jsonify({**feedback, "image_url": image_url, 'productName': product_info, 'data': nutrition_data})
     except Exception as e:
         print('Scanning error: ', e)
         return jsonify({"error": str(e)}), 500
-    
+
 @app.route("/api/recommendations", methods=['GET'])
 def get_recommendations():
     try:
