@@ -67,10 +67,6 @@ def generate_suggestion(score, product, nutrients_issue):
     ],
     response_model=DataModel
     )
-
-    # Print the formatted response output
-    '''for field, value in response.model_dump().items():
-        print(f"{field.replace('_', ' ').title()}: {value}\n")'''
     return response.dict()
 
 

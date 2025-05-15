@@ -449,7 +449,7 @@ def add_recommendation():
         
         add_results(user_id, feedback['reasoning'])
 
-        return jsonify(feedback, image_url)
+        return jsonify({**feedback, "image_url": image_url, 'productName': Product_Name})
     except Exception as e:
         print('Scanning error: ', e)
         return jsonify({"error": str(e)}), 500
