@@ -173,6 +173,7 @@ def signup():
 def save_user_profile():
     try:
         data = request.get_json()
+        user_id = data.get('user_id')
         name = data.get('name')
         age = data.get('age')
         occupation = data.get('occupation')
@@ -184,18 +185,30 @@ def save_user_profile():
         dislikes = json.dumps(data.get('dislikes', []))
         quote = data.get('quote')
 
+        if not user_id:
+            return jsonify({'error': 'user_id is required'}), 400
+
         conn = db_connect()
         cursor = conn.cursor()
 
-        insert_query = """
-        INSERT INTO user_profiles 
-        (name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-
-        values = (name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote)
-
-        cursor.execute(insert_query, values)
+        # Check if profile exists for this user
+        cursor.execute("SELECT id FROM user_profiles WHERE user_id = %s", (user_id,))
+        existing = cursor.fetchone()
+        if existing:
+            # Update existing profile
+            update_query = """
+            UPDATE user_profiles SET name=%s, age=%s, occupation=%s, health_conditions=%s, gender=%s, daily_routine=%s, goals=%s, likes=%s, dislikes=%s, quote=%s WHERE user_id=%s
+            """
+            values = (name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote, user_id)
+            cursor.execute(update_query, values)
+        else:
+            # Insert new profile
+            insert_query = """
+            INSERT INTO user_profiles (user_id, name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (user_id, name, age, occupation, health_conditions, gender, daily_routine, goals, likes, dislikes, quote)
+            cursor.execute(insert_query, values)
         conn.commit()
         cursor.close()
         conn.close()

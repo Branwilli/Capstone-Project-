@@ -15,6 +15,9 @@ function UserSetup({ setIsLoggedIn, setIsSetupComplete }) {
   const [quote, setQuote] = useState('');
   const [error, setError] = useState('');
 
+  // Get user_id from localStorage (or context/auth in real app)
+  const userId = localStorage.getItem('user_id') || 1;
+
   const routineOptions = ['Cook', 'Work', 'Socialize', 'Walk', 'Volunteer', 'Exercise', 'Meditate', 'Read', 'Travel'];
   const goalOptions = ['Prevention of illness', 'Social networking', 'Exercising discipline', 'Weight loss', 'Mental well-being', 'Improved fitness'];
   const likeDislikeOptions = ['Social networking', 'Healthy eating', 'Fast food', 'Outdoor activities', 'Indoor games'];
@@ -35,7 +38,7 @@ function UserSetup({ setIsLoggedIn, setIsSetupComplete }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const profile = { name, age, occupation, healthConditions, gender, dailyRoutine, goals, likes, dislikes, quote };
+    const profile = { user_id: userId, name, age, occupation, healthConditions, gender, dailyRoutine, goals, likes, dislikes, quote };
     try {
       const response = await fetch('/api/users/profile', {
         method: 'POST',
