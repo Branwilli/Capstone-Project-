@@ -10,33 +10,53 @@ function ProfilePage() {
   const [alert, setAlert] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    async function fetchProfile() {
       try {
-        // Replace with actual user_id from auth/session in production
         const userId = localStorage.getItem('user_id') || 1;
         const response = await fetch(`/api/users/profile?user_id=${userId}`);
         if (response.ok) {
           const data = await response.json();
-          setProfile(data);
+          setProfile({
+            ...data,
+            // Parse JSON fields if needed
+            dailyRoutine: Array.isArray(data.dailyRoutine) ? data.dailyRoutine : (data.dailyRoutine ? JSON.parse(data.dailyRoutine) : []),
+            goals: Array.isArray(data.goals) ? data.goals : (data.goals ? JSON.parse(data.goals) : []),
+            likes: Array.isArray(data.likes) ? data.likes : (data.likes ? JSON.parse(data.likes) : []),
+            dislikes: Array.isArray(data.dislikes) ? data.dislikes : (data.dislikes ? JSON.parse(data.dislikes) : []),
+            healthConditions: data.health_conditions || data.healthConditions || '',
+            gender: data.gender || '',
+            occupation: data.occupation || '',
+            age: data.age || '',
+            name: data.name || '',
+            quote: data.quote || ''
+          });
         } else {
           setProfile({});
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        setProfile({});
       }
-    };
+    }
     fetchProfile();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Replace with actual user_id from auth/session in production
       const userId = localStorage.getItem('user_id') || 1;
+      const payload = {
+        ...profile,
+        user_id: userId,
+        dailyRoutine: profile.dailyRoutine || [],
+        goals: profile.goals || [],
+        likes: profile.likes || [],
+        dislikes: profile.dislikes || [],
+      };
       const response = await fetch('/api/users/profile', {
-        method: 'PUT',
+        method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...profile, user_id: userId })
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         setIsEditing(false);
